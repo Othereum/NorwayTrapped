@@ -47,12 +47,17 @@ private: // Input
 	uint8 bWantsToWalk : 1;
 
 	bool CanSprint() const;
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	uint8 bSprinting : 1;
-
 	void SprintPressed();
 	void SprintReleased();
 	uint8 bWantsToSprint : 1;
+
+	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	uint8 bSprinting : 1;
+
+	void SetSprinting(bool b);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetSprinting(bool b);
 
 public: // Simple getter/setters
 	class UCameraComponent* GetCamera() const { return Camera; }

@@ -29,22 +29,26 @@ void ANorwayTrappedCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bSprinting && CanSprint())
+	if (IsLocallyControlled())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = MaxSprintSpeed;
-		bSprinting = true;
-	}
-	else if (bSprinting && !CanSprint())
-	{
-		float Default = GetClass()->GetDefaultObject<ANorwayTrappedCharacter>()->GetCharacterMovement()->MaxWalkSpeed;
-		GetCharacterMovement()->MaxWalkSpeed = Default;
-		bSprinting = false;
+		if (!bSprinting && CanSprint())
+		{
+			SetSprinting(true);
+			ServerSetSprinting(true);
+		}
+		else if (bSprinting && !CanSprint())
+		{
+			SetSprinting(false);
+			ServerSetSprinting(false);
+		}
 	}
 }
 
 void ANorwayTrappedCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ANorwayTrappedCharacter, bSprinting);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -123,4 +127,20 @@ void ANorwayTrappedCharacter::SprintPressed()
 void ANorwayTrappedCharacter::SprintReleased()
 {
 	bWantsToSprint = false;
+}
+
+void ANorwayTrappedCharacter::SetSprinting(bool b)
+{
+	GetCharacterMovement()->MaxWalkSpeed = b ? MaxSprintSpeed : GetClass()->GetDefaultObject<ANorwayTrappedCharacter>()->GetCharacterMovement()->MaxWalkSpeed;
+	bSprinting = b;
+}
+
+void ANorwayTrappedCharacter::ServerSetSprinting_Implementation(bool b)
+{
+	SetSprinting(b);
+}
+
+bool ANorwayTrappedCharacter::ServerSetSprinting_Validate(bool)
+{
+	return true;
 }
