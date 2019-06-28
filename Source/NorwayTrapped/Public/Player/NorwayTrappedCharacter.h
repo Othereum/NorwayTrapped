@@ -26,6 +26,9 @@ public: // Public variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float BaseLookUpRate = 45.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSprintSpeed = 500.f;
+
 private: // Virtual function override
 	virtual void BeginPlay();
 	virtual void Tick(float DeltaTime);

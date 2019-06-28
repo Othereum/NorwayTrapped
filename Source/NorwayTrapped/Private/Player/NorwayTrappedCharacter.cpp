@@ -31,12 +31,13 @@ void ANorwayTrappedCharacter::Tick(float DeltaTime)
 
 	if (!bSprinting && CanSprint())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 500.f;
+		GetCharacterMovement()->MaxWalkSpeed = MaxSprintSpeed;
 		bSprinting = true;
 	}
 	else if (bSprinting && !CanSprint())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 300.f;
+		float Default = GetClass()->GetDefaultObject<ANorwayTrappedCharacter>()->GetCharacterMovement()->MaxWalkSpeed;
+		GetCharacterMovement()->MaxWalkSpeed = Default;
 		bSprinting = false;
 	}
 }
