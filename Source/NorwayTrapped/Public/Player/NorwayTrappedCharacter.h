@@ -16,9 +16,6 @@ private: // Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = true))
 	class UCameraComponent* Camera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	class UCharacterStateComponent* State;
-
 public: // Public interfaces
 	ANorwayTrappedCharacter();
 
@@ -31,14 +28,27 @@ public: // Public variables
 
 private: // Virtual function override
 	virtual void BeginPlay();
+	virtual void Tick(float DeltaTime);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
-private: // Internal functions
-	void MoveForward(float Val);
-	void MoveRight(float Val);
+private: // Input
+	void MoveForward(float Value);
+	void MoveRight(float Value);
 
-private: // Internal variables
+	void Walk();
+	bool CanWalk() const;
+
+	void WalkPressed();
+	void WalkReleased();
+	uint8 bWantsToWalk : 1;
+
+	bool CanSprint() const;
+	uint8 bSprinting : 1;
+
+	void SprintPressed();
+	void SprintReleased();
+	uint8 bWantsToSprint : 1;
 
 public: // Simple getter/setters
 	class UCameraComponent* GetCamera() const { return Camera; }
