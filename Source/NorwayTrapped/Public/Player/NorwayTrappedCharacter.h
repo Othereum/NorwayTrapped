@@ -47,6 +47,7 @@ private: // Input
 	uint8 bWantsToWalk : 1;
 
 	bool CanSprint() const;
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 bSprinting : 1;
 
 	void SprintPressed();
@@ -55,5 +56,4 @@ private: // Input
 
 public: // Simple getter/setters
 	class UCameraComponent* GetCamera() const { return Camera; }
-
 };
