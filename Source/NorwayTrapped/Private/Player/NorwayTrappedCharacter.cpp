@@ -93,6 +93,16 @@ void ANorwayTrappedCharacter::MoveRight(float Value)
 	}
 }
 
+void ANorwayTrappedCharacter::WalkPressed()
+{
+	if (!bWantsToSprint) bWantsToWalk = bToggleToWalk ? !bWantsToWalk : true;
+}
+
+void ANorwayTrappedCharacter::WalkReleased()
+{
+	if (!bToggleToWalk) bWantsToWalk = false;
+}
+
 void ANorwayTrappedCharacter::Walk()
 {
 	ControlInputVector.Normalize();
@@ -104,29 +114,20 @@ bool ANorwayTrappedCharacter::CanWalk() const
 	return bWantsToWalk && !bSprinting;
 }
 
-void ANorwayTrappedCharacter::WalkPressed()
+void ANorwayTrappedCharacter::SprintPressed()
 {
-	bWantsToWalk = true;
+	bWantsToSprint = bToggleToSprint ? !bWantsToSprint : true;
+	bWantsToWalk = false;
 }
 
-void ANorwayTrappedCharacter::WalkReleased()
+void ANorwayTrappedCharacter::SprintReleased()
 {
-	bWantsToWalk = false;
+	if (!bToggleToSprint) bWantsToSprint = false;
 }
 
 bool ANorwayTrappedCharacter::CanSprint() const
 {
 	return bWantsToSprint && GetInputAxisValue("MoveForward") > 0.f;
-}
-
-void ANorwayTrappedCharacter::SprintPressed()
-{
-	bWantsToSprint = true;
-}
-
-void ANorwayTrappedCharacter::SprintReleased()
-{
-	bWantsToSprint = false;
 }
 
 void ANorwayTrappedCharacter::SetSprinting(bool b)

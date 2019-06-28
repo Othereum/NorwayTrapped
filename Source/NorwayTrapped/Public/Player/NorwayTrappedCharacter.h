@@ -12,53 +12,54 @@ class ANorwayTrappedCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-private: // Components
+private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = true))
 	class UCameraComponent* Camera;
 
-public: // Public interfaces
+public:
 	ANorwayTrappedCharacter();
 
-public: // Public variables
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-	float BaseTurnRate = 45.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
-	float BaseLookUpRate = 45.f;
+	class UCameraComponent* GetCamera() const { return Camera; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSprintSpeed = 500.f;
 
-private: // Virtual function override
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	float BaseTurnRate = 45.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	float BaseLookUpRate = 45.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	uint8 bToggleToWalk : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	uint8 bToggleToSprint : 1;
+
+private:
+	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	uint8 bSprinting : 1;
+	uint8 bWantsToWalk : 1;
+	uint8 bWantsToSprint : 1;
+
 	virtual void BeginPlay();
 	virtual void Tick(float DeltaTime);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
-private: // Input
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
+	void WalkPressed();
+	void WalkReleased();
 	void Walk();
 	bool CanWalk() const;
 
-	void WalkPressed();
-	void WalkReleased();
-	uint8 bWantsToWalk : 1;
-
-	bool CanSprint() const;
 	void SprintPressed();
 	void SprintReleased();
-	uint8 bWantsToSprint : 1;
-
-	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	uint8 bSprinting : 1;
-
+	bool CanSprint() const;
 	void SetSprinting(bool b);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetSprinting(bool b);
-
-public: // Simple getter/setters
-	class UCameraComponent* GetCamera() const { return Camera; }
 };
