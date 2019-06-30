@@ -5,16 +5,16 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "UnrealNetwork.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All)
+#include "ChrStateComp.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ANorwayTrappedCharacter
 
 ANorwayTrappedCharacter::ANorwayTrappedCharacter()
-	:Camera{ CreateDefaultSubobject<UCameraComponent>("Camera") }
+	:Camera{ CreateDefaultSubobject<UCameraComponent>("Camera") },
+	State{ CreateDefaultSubobject<UChrStateComp>("State") }
 {
 	PrimaryActorTick.bCanEverTick = true;
 	Camera->SetupAttachment(GetMesh(), "Eye");
@@ -25,30 +25,16 @@ void ANorwayTrappedCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
-void ANorwayTrappedCharacter::Tick(float DeltaTime)
+void ANorwayTrappedCharacter::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IsLocallyControlled())
-	{
-		if (!bSprinting && CanSprint())
-		{
-			SetSprinting(true);
-			ServerSetSprinting(true);
-		}
-		else if (bSprinting && !CanSprint())
-		{
-			SetSprinting(false);
-			ServerSetSprinting(false);
-		}
-	}
 }
 
 void ANorwayTrappedCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ANorwayTrappedCharacter, bSprinting);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -64,84 +50,21 @@ void ANorwayTrappedCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
-	PlayerInputComponent->BindAction("Walk", IE_Pressed, this, &ANorwayTrappedCharacter::WalkPressed);
-	PlayerInputComponent->BindAction("Walk", IE_Released, this, &ANorwayTrappedCharacter::WalkReleased);
-
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ANorwayTrappedCharacter::SprintPressed);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ANorwayTrappedCharacter::SprintReleased);
+	State->SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void ANorwayTrappedCharacter::MoveForward(float Value)
+void ANorwayTrappedCharacter::MoveForward(const float Value)
 {
 	if (Value != 0.f)
 	{
 		AddMovementInput(GetActorForwardVector(), Value);
-
-		// Only for keyboard
-		if (CanWalk()) Walk();
 	}
 }
 
-void ANorwayTrappedCharacter::MoveRight(float Value)
+void ANorwayTrappedCharacter::MoveRight(const float Value)
 {
 	if (Value != 0.f)
 	{
 		AddMovementInput(GetActorRightVector(), Value);
-
-		// Only for keyboard
-		if (CanWalk()) Walk();
 	}
-}
-
-void ANorwayTrappedCharacter::WalkPressed()
-{
-	if (!bWantsToSprint) bWantsToWalk = bToggleToWalk ? !bWantsToWalk : true;
-}
-
-void ANorwayTrappedCharacter::WalkReleased()
-{
-	if (!bToggleToWalk) bWantsToWalk = false;
-}
-
-void ANorwayTrappedCharacter::Walk()
-{
-	ControlInputVector.Normalize();
-	ControlInputVector *= .5f;
-}
-
-bool ANorwayTrappedCharacter::CanWalk() const
-{
-	return bWantsToWalk && !bSprinting;
-}
-
-void ANorwayTrappedCharacter::SprintPressed()
-{
-	bWantsToSprint = bToggleToSprint ? !bWantsToSprint : true;
-	bWantsToWalk = false;
-}
-
-void ANorwayTrappedCharacter::SprintReleased()
-{
-	if (!bToggleToSprint) bWantsToSprint = false;
-}
-
-bool ANorwayTrappedCharacter::CanSprint() const
-{
-	return bWantsToSprint && GetInputAxisValue("MoveForward") > 0.f;
-}
-
-void ANorwayTrappedCharacter::SetSprinting(bool b)
-{
-	GetCharacterMovement()->MaxWalkSpeed = b ? MaxSprintSpeed : GetClass()->GetDefaultObject<ANorwayTrappedCharacter>()->GetCharacterMovement()->MaxWalkSpeed;
-	bSprinting = b;
-}
-
-void ANorwayTrappedCharacter::ServerSetSprinting_Implementation(bool b)
-{
-	SetSprinting(b);
-}
-
-bool ANorwayTrappedCharacter::ServerSetSprinting_Validate(bool)
-{
-	return true;
 }
