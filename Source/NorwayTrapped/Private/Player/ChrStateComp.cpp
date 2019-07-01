@@ -16,10 +16,12 @@ void FStateInputData::Press(UChrStateComp* Comp)
 
 void FStateInputData::Release(UChrStateComp* Comp)
 {
-	if (!bToggle)
-	{
-		bPressed = false;
-	}
+	if (!bToggle) bPressed = false;
+}
+
+void FPostureData::Press(UChrStateComp* Comp)
+{
+	bPressed = bToggle ? (Comp->IsSprinting() ? bPressed : !bPressed) : true;
 }
 
 UChrStateComp::UChrStateComp()
@@ -76,16 +78,19 @@ void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	Transit();
 	if (Owner->IsLocallyControlled())
 	{
 		if (!bSprinting && CanSprint())
 		{
-			SetSprinting(true);
+			TrySetSprintingAndTransit(true);
 		}
 		else if (bSprinting && !CanSprint())
 		{
-			SetSprinting(false);
+			TrySetSprintingAndTransit(false);
+		}
+		else
+		{
+			Transit();
 		}
 	}
 }
@@ -140,24 +145,29 @@ bool UChrStateComp::ServerSetSprinting_Validate(bool)
 	return true;
 }
 
-void UChrStateComp::SetSprinting(const bool b)
+void UChrStateComp::TrySetSprintingAndTransit(const bool b)
 {
-	SetSprinting_Internal(b);
 	if (b)
 	{
 		if (Crouch.bToggle) Crouch.bPressed = false;
 		if (Prone.bToggle) Prone.bPressed = false;
 		if (Walk.bToggle) Walk.bPressed = false;
-		Transit();
 	}
-	ServerSetSprinting(b);
+	Transit();
+	if (!b || Posture == EPosture::Stand)
+	{
+		SetSprinting_Internal(b);
+		ServerSetSprinting(b);
+	}
 }
 
 void UChrStateComp::SetSprinting_Internal(const bool b)
 {
-	auto Speed = Owner->GetClass()->GetDefaultObject<ACharacter>()->GetCharacterMovement()->MaxWalkSpeed;
-	if (b) Speed *= Sprint.SpeedRatio;
-	Owner->GetCharacterMovement()->MaxWalkSpeed = Speed;
+	if (bSprinting != b)
+	{
+		if (b) Owner->GetCharacterMovement()->MaxWalkSpeed *= Sprint.SpeedRatio;
+		else Owner->GetCharacterMovement()->MaxWalkSpeed /= Sprint.SpeedRatio;
+	}
 	bSprinting = b;
 }
 

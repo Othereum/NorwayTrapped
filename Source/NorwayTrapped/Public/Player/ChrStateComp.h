@@ -41,6 +41,8 @@ struct FPostureData : public FStateInputData
 
 	UPROPERTY(EditAnywhere)
 	float CapsuleHalfHeight;
+
+	void Press(UChrStateComp* Comp);
 };
 
 DECLARE_EVENT_OneParam(UChrStateComp, FChrStateCompTickEvent, float)
@@ -57,6 +59,7 @@ public:
 	void SetCapsuleHalfHeight(float Height) const;
 	bool IsOverlapped(float Height) const;
 	void Transit();
+	bool IsSprinting() const { return bSprinting; }
 
 private:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -95,7 +98,7 @@ private:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetSprinting(bool b);
-	void SetSprinting(bool b);
+	void TrySetSprintingAndTransit(bool b);
 	void SetSprinting_Internal(bool b);
 	bool CanSprint() const;
 	void WalkIfCan(float);

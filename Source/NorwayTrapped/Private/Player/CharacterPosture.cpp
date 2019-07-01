@@ -92,7 +92,7 @@ void FCrouch::Enter(UChrStateComp* Comp) const
 
 bool FCrouch::CanEnter(UChrStateComp* Comp) const
 {
-	return !Comp->IsOverlapped(Comp->Crouch.CapsuleHalfHeight);
+	return !Comp->IsSprinting() && !Comp->IsOverlapped(Comp->Crouch.CapsuleHalfHeight);
 }
 
 void FCrouch::Exit(UChrStateComp* Comp) const
@@ -146,6 +146,11 @@ void FProne::Enter(UChrStateComp* Comp) const
 	if (Comp->Crouch.bToggle) Comp->Crouch.bPressed = false;
 	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight);
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Prone.SpeedRatio;
+}
+
+bool FProne::CanEnter(UChrStateComp* Comp) const
+{
+	return !Comp->IsSprinting();
 }
 
 void FProne::Exit(UChrStateComp* Comp) const

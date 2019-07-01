@@ -57,5 +57,6 @@ private:
 	EPosture GetEnum() const override;
 	FCharacterPosture* Transit(UChrStateComp* Comp) const override;
 	void Enter(UChrStateComp* Comp) const override;
+	bool CanEnter(UChrStateComp* Comp) const override;
 	void Exit(UChrStateComp* Comp) const override;
 };
