@@ -89,6 +89,8 @@ void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickTy
 			SetSprinting(false);
 		}
 	}
+
+	TickEvent.Broadcast(DeltaTime);
 }
 
 void UChrStateComp::WalkPressed()
@@ -104,7 +106,6 @@ void UChrStateComp::WalkReleased()
 void UChrStateComp::SprintPressed()
 {
 	Sprint.Press(this);
-	Walk.bPressed = false;
 }
 
 void UChrStateComp::SprintReleased()
@@ -145,7 +146,14 @@ bool UChrStateComp::ServerSetSprinting_Validate(bool)
 void UChrStateComp::SetSprinting(const bool b)
 {
 	SetSprinting_Internal(b);
-	if (IsNetSimulating()) ServerSetSprinting(b);
+	if (b)
+	{
+		if (Crouch.bToggle) Crouch.bPressed = false;
+		if (Prone.bToggle) Prone.bPressed = false;
+		if (Walk.bToggle) Walk.bPressed = false;
+		Transit();
+	}
+	ServerSetSprinting(b);
 }
 
 void UChrStateComp::SetSprinting_Internal(const bool b)
@@ -179,5 +187,12 @@ bool UChrStateComp::IsOverlapped(const float Height) const
 
 void UChrStateComp::Transit()
 {
-	PostureState->Transit(this, PostureState, Posture);
+	const auto NewState = PostureState->Transit(this);
+	if (NewState)
+	{
+		PostureState->Exit(this);
+		PostureState = NewState;
+		Posture = NewState->GetEnum();
+		NewState->Enter(this);
+	}
 }

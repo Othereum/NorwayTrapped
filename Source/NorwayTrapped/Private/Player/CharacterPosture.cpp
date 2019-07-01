@@ -3,6 +3,7 @@
 #include "CharacterPosture.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "ChrStateComp.h"
 
 static FStand GStand;
@@ -34,18 +35,13 @@ EPosture FStand::GetEnum() const
 	return EPosture::Stand;
 }
 
-void FStand::Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum)
+FCharacterPosture* FStand::Transit(UChrStateComp* Comp) const
 {
 	const auto NewState = Comp->Crouch.bPressed ? FCrouch::GetObject() : Comp->Prone.bPressed ? FProne::GetObject() : nullptr;
-	if (NewState && NewState->CanEnter(Comp))
-	{
-		NewState->Enter(Comp);
-		State = NewState;
-		Enum = NewState->GetEnum();
-	}
+	return NewState && NewState->CanEnter(Comp) ? NewState : nullptr;
 }
 
-void FStand::Enter(UChrStateComp* Comp)
+void FStand::Enter(UChrStateComp* Comp) const
 {
 	Comp->SetCapsuleHalfHeight(
 		Comp->Owner->GetClass()->GetDefaultObject<ACharacter>()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
@@ -69,26 +65,39 @@ EPosture FCrouch::GetEnum() const
 	return EPosture::Crouch;
 }
 
-void FCrouch::Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum)
+FCharacterPosture* FCrouch::Transit(UChrStateComp* Comp) const
 {
 	const auto NewState = Comp->Prone.bPressed ? FProne::GetObject() : !Comp->Crouch.bPressed ? FStand::GetObject() : nullptr;
-	if (NewState && NewState->CanEnter(Comp))
+	if (!NewState || !NewState->CanEnter(Comp))
 	{
-		NewState->Enter(Comp);
-		State = NewState;
-		Enum = NewState->GetEnum();
+		if (Comp->Prone.bPressed && Comp->Prone.bToggle)
+		{
+			Comp->Prone.bPressed = false;
+		}
+		else if (!Comp->Crouch.bPressed && Comp->Crouch.bToggle)
+		{
+			Comp->Crouch.bPressed = true;
+		}
+		return nullptr;
 	}
+	return NewState;
 }
 
-void FCrouch::Enter(UChrStateComp* Comp)
+void FCrouch::Enter(UChrStateComp* Comp) const
 {
-	Comp->Prone.bPressed = false;
+	if (Comp->Prone.bToggle) Comp->Prone.bPressed = false;
 	Comp->SetCapsuleHalfHeight(Comp->Crouch.CapsuleHalfHeight);
+	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Crouch.SpeedRatio;
 }
 
 bool FCrouch::CanEnter(UChrStateComp* Comp) const
 {
 	return !Comp->IsOverlapped(Comp->Crouch.CapsuleHalfHeight);
+}
+
+void FCrouch::Exit(UChrStateComp* Comp) const
+{
+	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Crouch.SpeedRatio;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -104,19 +113,32 @@ EPosture FProne::GetEnum() const
 	return EPosture::Prone;
 }
 
-void FProne::Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum)
+FCharacterPosture* FProne::Transit(UChrStateComp* Comp) const
 {
 	const auto NewState = Comp->Crouch.bPressed ? FCrouch::GetObject() : !Comp->Prone.bPressed ? FStand::GetObject() : nullptr;
-	if (NewState && NewState->CanEnter(Comp))
+	if (!NewState || !NewState->CanEnter(Comp))
 	{
-		NewState->Enter(Comp);
-		State = NewState;
-		Enum = NewState->GetEnum();
+		if (!Comp->Prone.bPressed && Comp->Prone.bToggle)
+		{
+			Comp->Prone.bPressed = true;
+		}
+		else if (Comp->Crouch.bPressed && Comp->Crouch.bToggle)
+		{
+			Comp->Crouch.bPressed = false;
+		}
+		return nullptr;
 	}
+	return NewState;
 }
 
-void FProne::Enter(UChrStateComp* Comp)
+void FProne::Enter(UChrStateComp* Comp) const
 {
-	Comp->Crouch.bPressed = false;
+	if (Comp->Crouch.bToggle) Comp->Crouch.bPressed = false;
 	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight);
+	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Prone.SpeedRatio;
+}
+
+void FProne::Exit(UChrStateComp* Comp) const
+{
+	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Prone.SpeedRatio;
 }

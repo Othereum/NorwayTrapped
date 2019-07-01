@@ -14,9 +14,10 @@ public:
 
 	virtual ~FCharacterPosture() = default;
 	virtual EPosture GetEnum() const = 0;
-	virtual void Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum) = 0;
-	virtual void Enter(UChrStateComp* Comp) = 0;
+	virtual FCharacterPosture* Transit(UChrStateComp* Comp) const = 0;
+	virtual void Enter(UChrStateComp* Comp) const = 0;
 	virtual bool CanEnter(UChrStateComp* Comp) const { return true; }
+	virtual void Exit(UChrStateComp* Comp) const {}
 };
 
 class FStand final : public FCharacterPosture
@@ -27,8 +28,8 @@ public:
 private:
 	friend FCharacterPosture* FCharacterPosture::GetByEnum(EPosture);
 	EPosture GetEnum() const override;
-	void Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum) override;
-	void Enter(UChrStateComp* Comp) override;
+	FCharacterPosture* Transit(UChrStateComp* Comp) const override;
+	void Enter(UChrStateComp* Comp) const override;
 	bool CanEnter(UChrStateComp* Comp) const override;
 };
 
@@ -40,9 +41,10 @@ public:
 private:
 	friend FCharacterPosture* FCharacterPosture::GetByEnum(EPosture);
 	EPosture GetEnum() const override;
-	void Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum) override;
-	void Enter(UChrStateComp* Comp) override;
+	FCharacterPosture* Transit(UChrStateComp* Comp) const override;
+	void Enter(UChrStateComp* Comp) const override;
 	bool CanEnter(UChrStateComp* Comp) const override;
+	void Exit(UChrStateComp* Comp) const override;
 };
 
 class FProne final : public FCharacterPosture
@@ -53,6 +55,7 @@ public:
 private:
 	friend FCharacterPosture* FCharacterPosture::GetByEnum(EPosture);
 	EPosture GetEnum() const override;
-	void Transit(UChrStateComp* Comp, FCharacterPosture*& State, EPosture& Enum) override;
-	void Enter(UChrStateComp* Comp) override;
+	FCharacterPosture* Transit(UChrStateComp* Comp) const override;
+	void Enter(UChrStateComp* Comp) const override;
+	void Exit(UChrStateComp* Comp) const override;
 };

@@ -43,6 +43,8 @@ struct FPostureData : public FStateInputData
 	float CapsuleHalfHeight;
 };
 
+DECLARE_EVENT_OneParam(UChrStateComp, FChrStateCompTickEvent, float)
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NORWAYTRAPPED_API UChrStateComp final : public UActorComponent
 {
@@ -63,6 +65,8 @@ private:
 
 public:
 	class ACharacter* const Owner = nullptr;
+
+	FChrStateCompTickEvent TickEvent;
 
 	UPROPERTY(EditAnywhere)
 	FName MoveForwardInputAxisName = "MoveForward";
