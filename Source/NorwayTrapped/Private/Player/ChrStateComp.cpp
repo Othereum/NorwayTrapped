@@ -12,7 +12,6 @@
 void FStateInputData::Press(UChrStateComp* Comp)
 {
 	bPressed = bToggle ? !bPressed : true;
-	Comp->Transit();
 }
 
 void FStateInputData::Release(UChrStateComp* Comp)
@@ -20,7 +19,6 @@ void FStateInputData::Release(UChrStateComp* Comp)
 	if (!bToggle)
 	{
 		bPressed = false;
-		Comp->Transit();
 	}
 }
 
@@ -78,6 +76,7 @@ void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	Transit();
 	if (Owner->IsLocallyControlled())
 	{
 		if (!bSprinting && CanSprint())
@@ -89,8 +88,6 @@ void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickTy
 			SetSprinting(false);
 		}
 	}
-
-	TickEvent.Broadcast(DeltaTime);
 }
 
 void UChrStateComp::WalkPressed()

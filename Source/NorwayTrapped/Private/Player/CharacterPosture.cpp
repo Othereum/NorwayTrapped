@@ -115,20 +115,30 @@ EPosture FProne::GetEnum() const
 
 FCharacterPosture* FProne::Transit(UChrStateComp* Comp) const
 {
-	const auto NewState = Comp->Crouch.bPressed ? FCrouch::GetObject() : !Comp->Prone.bPressed ? FStand::GetObject() : nullptr;
-	if (!NewState || !NewState->CanEnter(Comp))
+	if (Comp->Crouch.bPressed)
 	{
-		if (!Comp->Prone.bPressed && Comp->Prone.bToggle)
-		{
-			Comp->Prone.bPressed = true;
-		}
-		else if (Comp->Crouch.bPressed && Comp->Crouch.bToggle)
-		{
-			Comp->Crouch.bPressed = false;
-		}
-		return nullptr;
+		const auto Crouch = FCrouch::GetObject();
+		if (Crouch->CanEnter(Comp)) return Crouch;
 	}
-	return NewState;
+	else if (!Comp->Prone.bPressed)
+	{
+		const auto Stand = FStand::GetObject();
+		if (Stand->CanEnter(Comp)) return Stand;
+
+		const auto Crouch = FCrouch::GetObject();
+		if (Crouch->CanEnter(Comp)) return Crouch;
+	}
+
+	if (Comp->Crouch.bPressed && Comp->Crouch.bToggle)
+	{
+		Comp->Crouch.bPressed = false;
+	}
+	else if (!Comp->Prone.bPressed && Comp->Prone.bToggle)
+	{
+		Comp->Prone.bPressed = true;
+	}
+
+	return nullptr;
 }
 
 void FProne::Enter(UChrStateComp* Comp) const
