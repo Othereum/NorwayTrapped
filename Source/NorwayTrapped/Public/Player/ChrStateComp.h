@@ -106,8 +106,14 @@ private:
 	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 bSprinting : 1;
 
-	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(ReplicatedUsing = OnRep_Posture, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	EPosture Posture;
+
+	UFUNCTION()
+	void OnRep_Posture();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetPosture(EPosture NewPosture);
 
 	class FCharacterPosture* PostureState;
 };

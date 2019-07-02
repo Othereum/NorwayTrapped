@@ -54,6 +54,39 @@ void UChrStateComp::WalkIfCan(float)
 	}
 }
 
+void UChrStateComp::OnRep_Posture()
+{
+	if (PostureState->GetEnum() != Posture)
+	{
+		PostureState->Exit(this);
+		PostureState = FCharacterPosture::GetByEnum(Posture);
+		PostureState->Enter(this);
+	}
+}
+
+void UChrStateComp::ServerSetPosture_Implementation(const EPosture NewPosture)
+{
+	if (Posture != NewPosture)
+	{
+		PostureState->Exit(this);
+		PostureState = FCharacterPosture::GetByEnum(NewPosture);
+		Posture = NewPosture;
+		PostureState->Enter(this);
+	}
+}
+
+bool UChrStateComp::ServerSetPosture_Validate(const EPosture NewPosture)
+{
+	switch (NewPosture)
+	{
+	case EPosture::Stand:
+	case EPosture::Crouch:
+	case EPosture::Prone:
+		return true;
+	}
+	return false;
+}
+
 bool UChrStateComp::CanSprint() const
 {
 	return Sprint.bPressed && Owner->GetInputAxisValue("MoveForward") > 0.f;
@@ -63,7 +96,8 @@ void UChrStateComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UChrStateComp, bSprinting);
+	DOREPLIFETIME_CONDITION(UChrStateComp, bSprinting, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(UChrStateComp, Posture, COND_SkipOwner);
 }
 
 void UChrStateComp::BeginPlay()
@@ -157,7 +191,10 @@ void UChrStateComp::TrySetSprintingAndTransit(const bool b)
 	if (!b || Posture == EPosture::Stand)
 	{
 		SetSprinting_Internal(b);
-		ServerSetSprinting(b);
+		if (Owner->Role == ROLE_AutonomousProxy)
+		{
+			ServerSetSprinting(b);
+		}
 	}
 }
 
@@ -173,9 +210,14 @@ void UChrStateComp::SetSprinting_Internal(const bool b)
 
 void UChrStateComp::SetCapsuleHalfHeight(const float Height) const
 {
-	const auto Offset = Height - Owner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	Owner->AddActorLocalOffset({ 0.f, 0.f, Offset });
-	Owner->GetMesh()->AddRelativeLocation({ 0.f, 0.f, -Offset });
+	const auto MeshOffset = -GetDefault<ACharacter>(Owner->GetClass())->GetMesh()->RelativeLocation.Z - Height;
+	Owner->OnStartCrouch(MeshOffset, MeshOffset * Owner->GetActorScale().Z);
+	Owner->GetMesh()->UpdateComponentToWorld();
+
+	if (Owner->Role != ROLE_SimulatedProxy)
+	{
+		Owner->AddActorLocalOffset({ 0.f, 0.f, (Height - Owner->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()) * Owner->GetActorScale().Z });
+	}
 	Owner->GetCapsuleComponent()->SetCapsuleHalfHeight(Height);
 }
 
@@ -201,5 +243,9 @@ void UChrStateComp::Transit()
 		PostureState = NewState;
 		Posture = NewState->GetEnum();
 		NewState->Enter(this);
+		if (Owner->Role == ROLE_AutonomousProxy)
+		{
+			ServerSetPosture(Posture);
+		}
 	}
 }
