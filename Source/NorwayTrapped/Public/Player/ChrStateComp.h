@@ -23,9 +23,6 @@ struct FStateInputData
 	float SpeedRatio = 1.f;
 
 	UPROPERTY(EditAnywhere)
-	FName InputName;
-
-	UPROPERTY(EditAnywhere)
 	uint8 bToggle : 1;
 
 	uint8 bPressed : 1;
@@ -43,6 +40,20 @@ struct FPostureData : public FStateInputData
 	float CapsuleHalfHeight;
 
 	void Press(UChrStateComp* Comp);
+};
+
+USTRUCT()
+struct FProneData : public FPostureData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	float SwitchTime;
+
+	UPROPERTY(EditAnywhere)
+	float SpeedRatioWhileSwitching = 1.f;
+
+	uint8 bSwitching : 1;
 };
 
 DECLARE_EVENT_OneParam(UChrStateComp, FChrStateCompTickEvent, float)
@@ -72,9 +83,6 @@ public:
 	FChrStateCompTickEvent TickEvent;
 
 	UPROPERTY(EditAnywhere)
-	FName MoveForwardInputAxisName = "MoveForward";
-
-	UPROPERTY(EditAnywhere)
 	FStateInputData Walk;
 
 	UPROPERTY(EditAnywhere)
@@ -84,7 +92,7 @@ public:
 	FPostureData Crouch;
 
 	UPROPERTY(EditAnywhere)
-	FPostureData Prone;
+	FProneData Prone;
 
 private:
 	void WalkPressed();
@@ -101,7 +109,7 @@ private:
 	void TrySetSprintingAndTransit(bool b);
 	void SetSprinting_Internal(bool b);
 	bool CanSprint() const;
-	void WalkIfCan(float);
+	void ModifyInputScale(float);
 
 	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 bSprinting : 1;

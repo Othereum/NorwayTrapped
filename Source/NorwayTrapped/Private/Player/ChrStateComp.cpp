@@ -32,25 +32,28 @@ UChrStateComp::UChrStateComp()
 
 void UChrStateComp::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	PlayerInputComponent->BindAxis(MoveForwardInputAxisName, this, &UChrStateComp::WalkIfCan);
-	PlayerInputComponent->BindAction(Walk.InputName, IE_Pressed, this, &UChrStateComp::WalkPressed);
-	PlayerInputComponent->BindAction(Walk.InputName, IE_Released, this, &UChrStateComp::WalkReleased);
-	PlayerInputComponent->BindAction(Sprint.InputName, IE_Pressed, this, &UChrStateComp::SprintPressed);
-	PlayerInputComponent->BindAction(Sprint.InputName, IE_Released, this, &UChrStateComp::SprintReleased);
-	PlayerInputComponent->BindAction(Crouch.InputName, IE_Pressed, this, &UChrStateComp::CrouchPressed);
-	PlayerInputComponent->BindAction(Crouch.InputName, IE_Released, this, &UChrStateComp::CrouchReleased);
-	PlayerInputComponent->BindAction(Prone.InputName, IE_Pressed, this, &UChrStateComp::PronePressed);
-	PlayerInputComponent->BindAction(Prone.InputName, IE_Released, this, &UChrStateComp::ProneReleased);
+	PlayerInputComponent->BindAxis("MoveForward", this, &UChrStateComp::ModifyInputScale);
+	PlayerInputComponent->BindAxis("MoveRight", this, &UChrStateComp::ModifyInputScale);
+	PlayerInputComponent->BindAction("Walk", IE_Pressed, this, &UChrStateComp::WalkPressed);
+	PlayerInputComponent->BindAction("Walk", IE_Released, this, &UChrStateComp::WalkReleased);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &UChrStateComp::SprintPressed);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &UChrStateComp::SprintReleased);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &UChrStateComp::CrouchPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &UChrStateComp::CrouchReleased);
+	PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &UChrStateComp::PronePressed);
+	PlayerInputComponent->BindAction("Prone", IE_Released, this, &UChrStateComp::ProneReleased);
 }
 
-void UChrStateComp::WalkIfCan(float)
+void UChrStateComp::ModifyInputScale(float)
 {
-	if (Walk.bPressed && !bSprinting)
+	auto InputScale = 1.f;
+	if (Walk.bPressed && !bSprinting) InputScale *= Walk.SpeedRatio;
+	if (Prone.bSwitching) InputScale *= Prone.SpeedRatioWhileSwitching;
+	if (InputScale != 1.f)
 	{
 		auto ControlInputVector = Owner->ConsumeMovementInputVector();
 		ControlInputVector.Normalize();
-		ControlInputVector *= .5f;
-		Owner->AddMovementInput(ControlInputVector, 1.f, true);
+		Owner->AddMovementInput(ControlInputVector, InputScale, true);
 	}
 }
 

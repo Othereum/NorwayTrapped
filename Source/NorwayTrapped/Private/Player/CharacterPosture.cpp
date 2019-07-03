@@ -4,6 +4,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 #include "ChrStateComp.h"
 
 static FStand GStand;
@@ -141,11 +142,23 @@ FCharacterPosture* FProne::Transit(UChrStateComp* Comp) const
 	return nullptr;
 }
 
+static void SetProneSwitching(UChrStateComp* Comp)
+{
+	Comp->Prone.bSwitching = true;
+	FTimerHandle Handle;
+	Comp->GetWorld()->GetTimerManager().SetTimer(
+		Handle, 
+		[Comp] { Comp->Prone.bSwitching = false; },
+		Comp->Prone.SwitchTime, false
+	);
+}
+
 void FProne::Enter(UChrStateComp* Comp) const
 {
 	if (Comp->Crouch.bToggle) Comp->Crouch.bPressed = false;
 	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight);
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Prone.SpeedRatio;
+	SetProneSwitching(Comp);
 }
 
 bool FProne::CanEnter(UChrStateComp* Comp) const
@@ -156,4 +169,5 @@ bool FProne::CanEnter(UChrStateComp* Comp) const
 void FProne::Exit(UChrStateComp* Comp) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Prone.SpeedRatio;
+	SetProneSwitching(Comp);
 }
