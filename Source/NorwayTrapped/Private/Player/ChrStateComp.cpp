@@ -234,10 +234,20 @@ void UChrStateComp::SetCapsuleHalfHeight(const float Height, const float MeshOff
 	Owner->OnStartCrouch(MeshAdjust, MeshAdjust * Owner->GetActorScale().Z);
 	Owner->GetMesh()->UpdateComponentToWorld();
 
-	if (Owner->Role != ROLE_SimulatedProxy)
+	if (Owner->Role == ROLE_SimulatedProxy)
+	{
+		auto ClientData = Owner->GetCharacterMovement()->GetPredictionData_Client_Character();
+		if (ClientData)
+		{
+			ClientData->MeshTranslationOffset = FVector::ZeroVector;
+			ClientData->OriginalMeshTranslationOffset = FVector::ZeroVector;
+		}
+	}
+	else
 	{
 		Owner->AddActorLocalOffset({ 0.f, 0.f, (Height - Owner->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()) * Owner->GetActorScale().Z });
 	}
+
 	Owner->GetCapsuleComponent()->SetCapsuleHalfHeight(Height);
 }
 
