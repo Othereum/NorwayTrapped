@@ -61,9 +61,11 @@ void UChrStateComp::OnRep_Posture()
 {
 	if (PostureState->GetEnum() != Posture)
 	{
-		PostureState->Exit(this);
-		PostureState = FCharacterPosture::GetByEnum(Posture);
-		PostureState->Enter(this);
+		const auto Old = PostureState;
+		const auto New = FCharacterPosture::GetByEnum(Posture);
+		Old->Exit(this, New);
+		PostureState = New;
+		New->Enter(this, Old);
 	}
 }
 
@@ -71,10 +73,11 @@ void UChrStateComp::ServerSetPosture_Implementation(const EPosture NewPosture)
 {
 	if (Posture != NewPosture)
 	{
-		PostureState->Exit(this);
-		PostureState = FCharacterPosture::GetByEnum(NewPosture);
+		const auto New = FCharacterPosture::GetByEnum(NewPosture);
+		PostureState->Exit(this, New);
+		New->Enter(this, PostureState);
+		PostureState = New;
 		Posture = NewPosture;
-		PostureState->Enter(this);
 	}
 }
 
@@ -211,10 +214,10 @@ void UChrStateComp::SetSprinting_Internal(const bool b)
 	bSprinting = b;
 }
 
-void UChrStateComp::SetCapsuleHalfHeight(const float Height) const
+void UChrStateComp::SetCapsuleHalfHeight(const float Height, const float MeshOffset) const
 {
-	const auto MeshOffset = -GetDefault<ACharacter>(Owner->GetClass())->GetMesh()->RelativeLocation.Z - Height;
-	Owner->OnStartCrouch(MeshOffset, MeshOffset * Owner->GetActorScale().Z);
+	const auto MeshAdjust = GetDefault<ACharacter>(Owner->GetClass())->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() - Height + MeshOffset;
+	Owner->OnStartCrouch(MeshAdjust, MeshAdjust * Owner->GetActorScale().Z);
 	Owner->GetMesh()->UpdateComponentToWorld();
 
 	if (Owner->Role != ROLE_SimulatedProxy)
@@ -242,10 +245,10 @@ void UChrStateComp::Transit()
 	const auto NewState = PostureState->Transit(this);
 	if (NewState)
 	{
-		PostureState->Exit(this);
-		PostureState = NewState;
+		PostureState->Exit(this, NewState);
+		NewState->Enter(this, PostureState);
 		Posture = NewState->GetEnum();
-		NewState->Enter(this);
+		PostureState = NewState;
 		if (Owner->Role == ROLE_AutonomousProxy)
 		{
 			ServerSetPosture(Posture);

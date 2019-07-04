@@ -42,7 +42,7 @@ FCharacterPosture* FStand::Transit(UChrStateComp* Comp) const
 	return NewState && NewState->CanEnter(Comp) ? NewState : nullptr;
 }
 
-void FStand::Enter(UChrStateComp* Comp) const
+void FStand::Enter(UChrStateComp* Comp, FCharacterPosture* Before) const
 {
 	Comp->SetCapsuleHalfHeight(
 		Comp->Owner->GetClass()->GetDefaultObject<ACharacter>()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
@@ -51,6 +51,11 @@ void FStand::Enter(UChrStateComp* Comp) const
 bool FStand::CanEnter(UChrStateComp* Comp) const
 {
 	return !Comp->IsOverlapped(Comp->Owner->GetClass()->GetDefaultObject<ACharacter>()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+}
+
+float FStand::GetProneSwitchTime(UChrStateComp* Comp) const
+{
+	return Comp->Prone.StandSwitchTime;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -84,10 +89,10 @@ FCharacterPosture* FCrouch::Transit(UChrStateComp* Comp) const
 	return NewState;
 }
 
-void FCrouch::Enter(UChrStateComp* Comp) const
+void FCrouch::Enter(UChrStateComp* Comp, FCharacterPosture* Before) const
 {
 	if (Comp->Prone.bToggle) Comp->Prone.bPressed = false;
-	Comp->SetCapsuleHalfHeight(Comp->Crouch.CapsuleHalfHeight);
+	Comp->SetCapsuleHalfHeight(Comp->Crouch.CapsuleHalfHeight, Comp->Crouch.MeshOffset);
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Crouch.SpeedRatio;
 }
 
@@ -96,9 +101,14 @@ bool FCrouch::CanEnter(UChrStateComp* Comp) const
 	return !Comp->IsSprinting() && !Comp->IsOverlapped(Comp->Crouch.CapsuleHalfHeight);
 }
 
-void FCrouch::Exit(UChrStateComp* Comp) const
+void FCrouch::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Crouch.SpeedRatio;
+}
+
+float FCrouch::GetProneSwitchTime(UChrStateComp* Comp) const
+{
+	return Comp->Prone.CrouchSwitchTime;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -142,23 +152,23 @@ FCharacterPosture* FProne::Transit(UChrStateComp* Comp) const
 	return nullptr;
 }
 
-static void SetProneSwitching(UChrStateComp* Comp)
+static void SetProneSwitching(UChrStateComp* Comp, const float Time)
 {
 	Comp->Prone.bSwitching = true;
-	FTimerHandle Handle;
 	Comp->GetWorld()->GetTimerManager().SetTimer(
-		Handle, 
+		Comp->Prone.SwitchTimerHandle, 
 		[Comp] { Comp->Prone.bSwitching = false; },
-		Comp->Prone.SwitchTime, false
+		Time,
+		false
 	);
 }
 
-void FProne::Enter(UChrStateComp* Comp) const
+void FProne::Enter(UChrStateComp* Comp, FCharacterPosture* Before) const
 {
 	if (Comp->Crouch.bToggle) Comp->Crouch.bPressed = false;
-	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight);
+	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight, Comp->Prone.MeshOffset);
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Prone.SpeedRatio;
-	SetProneSwitching(Comp);
+	SetProneSwitching(Comp, Before->GetProneSwitchTime(Comp));
 }
 
 bool FProne::CanEnter(UChrStateComp* Comp) const
@@ -166,8 +176,8 @@ bool FProne::CanEnter(UChrStateComp* Comp) const
 	return !Comp->IsSprinting();
 }
 
-void FProne::Exit(UChrStateComp* Comp) const
+void FProne::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Prone.SpeedRatio;
-	SetProneSwitching(Comp);
+	SetProneSwitching(Comp, After->GetProneSwitchTime(Comp));
 }

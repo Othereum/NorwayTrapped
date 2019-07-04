@@ -39,6 +39,9 @@ struct FPostureData : public FStateInputData
 	UPROPERTY(EditAnywhere)
 	float CapsuleHalfHeight;
 
+	UPROPERTY(EditAnywhere)
+	float MeshOffset;
+
 	void Press(UChrStateComp* Comp);
 };
 
@@ -48,12 +51,16 @@ struct FProneData : public FPostureData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	float SwitchTime;
+	float StandSwitchTime;
+
+	UPROPERTY(EditAnywhere)
+	float CrouchSwitchTime;
 
 	UPROPERTY(EditAnywhere)
 	float SpeedRatioWhileSwitching = 1.f;
 
 	uint8 bSwitching : 1;
+	FTimerHandle SwitchTimerHandle;
 };
 
 DECLARE_EVENT_OneParam(UChrStateComp, FChrStateCompTickEvent, float)
@@ -67,7 +74,7 @@ public:
 	UChrStateComp();
 
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
-	void SetCapsuleHalfHeight(float Height) const;
+	void SetCapsuleHalfHeight(float Height, float MeshOffset = 0.f) const;
 	bool IsOverlapped(float Height) const;
 	void Transit();
 	bool IsSprinting() const { return bSprinting; }
