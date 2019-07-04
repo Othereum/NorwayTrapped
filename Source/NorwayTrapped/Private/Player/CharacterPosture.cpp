@@ -4,7 +4,6 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "TimerManager.h"
 #include "ChrStateComp.h"
 
 static FStand GStand;
@@ -53,9 +52,9 @@ bool FStand::CanEnter(UChrStateComp* Comp) const
 	return !Comp->IsOverlapped(Comp->Owner->GetClass()->GetDefaultObject<ACharacter>()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 }
 
-float FStand::GetProneSwitchTime(UChrStateComp* Comp) const
+void FStand::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
-	return Comp->Prone.StandSwitchTime;
+	Comp->PlayAnimMontage(Comp->Stand.GetSwitchToAnim(After->GetEnum()));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -104,11 +103,7 @@ bool FCrouch::CanEnter(UChrStateComp* Comp) const
 void FCrouch::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Crouch.SpeedRatio;
-}
-
-float FCrouch::GetProneSwitchTime(UChrStateComp* Comp) const
-{
-	return Comp->Prone.CrouchSwitchTime;
+	Comp->PlayAnimMontage(Comp->Crouch.GetSwitchToAnim(After->GetEnum()));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -152,23 +147,13 @@ FCharacterPosture* FProne::Transit(UChrStateComp* Comp) const
 	return nullptr;
 }
 
-static void SetProneSwitching(UChrStateComp* Comp, const float Time)
-{
-	Comp->Prone.bSwitching = true;
-	Comp->GetWorld()->GetTimerManager().SetTimer(
-		Comp->Prone.SwitchTimerHandle, 
-		[Comp] { Comp->Prone.bSwitching = false; },
-		Time,
-		false
-	);
-}
-
 void FProne::Enter(UChrStateComp* Comp, FCharacterPosture* Before) const
 {
 	if (Comp->Crouch.bToggle) Comp->Crouch.bPressed = false;
 	Comp->SetCapsuleHalfHeight(Comp->Prone.CapsuleHalfHeight, Comp->Prone.MeshOffset);
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed *= Comp->Prone.SpeedRatio;
-	SetProneSwitching(Comp, Before->GetProneSwitchTime(Comp));
+	Comp->SetProneSwitchDelegate();
+	Comp->Prone.bSwitching = true;
 }
 
 bool FProne::CanEnter(UChrStateComp* Comp) const
@@ -179,5 +164,8 @@ bool FProne::CanEnter(UChrStateComp* Comp) const
 void FProne::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Prone.SpeedRatio;
-	SetProneSwitching(Comp, After->GetProneSwitchTime(Comp));
+	const auto Anim = Comp->Prone.GetSwitchToAnim(After->GetEnum());
+	Comp->PlayAnimMontage(Anim);
+	Comp->SetProneSwitchDelegate();
+	Comp->Prone.bSwitching = true;
 }

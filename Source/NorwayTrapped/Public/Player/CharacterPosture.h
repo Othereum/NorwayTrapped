@@ -14,11 +14,10 @@ public:
 
 	virtual ~FCharacterPosture() = default;
 	virtual EPosture GetEnum() const = 0;
-	virtual FCharacterPosture* Transit(UChrStateComp* Comp) const = 0;
-	virtual void Enter(UChrStateComp* Comp, FCharacterPosture* Before) const = 0;
+	virtual FCharacterPosture* Transit(UChrStateComp* Comp) const { return nullptr; }
+	virtual void Enter(UChrStateComp* Comp, FCharacterPosture* Before) const {}
 	virtual bool CanEnter(UChrStateComp* Comp) const { return true; }
 	virtual void Exit(UChrStateComp* Comp, FCharacterPosture* After) const {}
-	virtual float GetProneSwitchTime(UChrStateComp* Comp) const { return 0.f; }
 };
 
 class FStand final : public FCharacterPosture
@@ -32,7 +31,7 @@ private:
 	FCharacterPosture* Transit(UChrStateComp* Comp) const override;
 	void Enter(UChrStateComp* Comp, FCharacterPosture* Before) const override;
 	bool CanEnter(UChrStateComp* Comp) const override;
-	float GetProneSwitchTime(UChrStateComp* Comp) const override;
+	void Exit(UChrStateComp* Comp, FCharacterPosture* After) const override;
 };
 
 class FCrouch final : public FCharacterPosture
@@ -47,7 +46,6 @@ private:
 	void Enter(UChrStateComp* Comp, FCharacterPosture* Before) const override;
 	bool CanEnter(UChrStateComp* Comp) const override;
 	void Exit(UChrStateComp* Comp, FCharacterPosture* After) const override;
-	float GetProneSwitchTime(UChrStateComp* Comp) const override;
 };
 
 class FProne final : public FCharacterPosture

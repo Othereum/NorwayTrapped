@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UnrealNetwork.h"
 #include "CharacterPosture.h"
+#include "Animation/AnimInstance.h"
 
 void FStateInputData::Press(UChrStateComp* Comp)
 {
@@ -96,6 +97,19 @@ bool UChrStateComp::ServerSetPosture_Validate(const EPosture NewPosture)
 bool UChrStateComp::CanSprint() const
 {
 	return Sprint.bPressed && Owner->GetInputAxisValue("MoveForward") > 0.f;
+}
+
+void UChrStateComp::PlayAnimMontage(UAnimMontage* Anim)
+{
+	Owner->PlayAnimMontage(Anim);
+	LastAnim = Anim;
+}
+
+void UChrStateComp::SetProneSwitchDelegate()
+{
+	FOnMontageBlendingOutStarted Delegate;
+	Delegate.BindLambda([this](UAnimMontage*, bool) { Prone.bSwitching = false; });
+	Owner->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(Delegate, LastAnim);
 }
 
 void UChrStateComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

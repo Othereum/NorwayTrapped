@@ -13,6 +13,7 @@ enum class EPosture : uint8
 };
 
 class UChrStateComp;
+class UAnimMontage;
 
 USTRUCT()
 struct FStateInputData
@@ -32,6 +33,23 @@ struct FStateInputData
 };
 
 USTRUCT()
+struct FPostureSwitchAnimData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToStand;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToCrouch;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToProne;
+
+	UAnimMontage* GetSwitchToAnim(const EPosture To) const { return (&ToStand)[static_cast<uint8>(To)]; }
+};
+
+USTRUCT()
 struct FPostureData : public FStateInputData
 {
 	GENERATED_BODY()
@@ -42,28 +60,30 @@ struct FPostureData : public FStateInputData
 	UPROPERTY(EditAnywhere)
 	float MeshOffset;
 
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToStand;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToCrouch;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ToProne;
+
+	UAnimMontage* GetSwitchToAnim(const EPosture To) const { return (&ToStand)[static_cast<uint8>(To)]; }
 	void Press(UChrStateComp* Comp);
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FProneData : public FPostureData
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	float StandSwitchTime;
-
-	UPROPERTY(EditAnywhere)
-	float CrouchSwitchTime;
-
-	UPROPERTY(EditAnywhere)
 	float SpeedRatioWhileSwitching = 1.f;
 
+	UPROPERTY(BlueprintReadOnly)
 	uint8 bSwitching : 1;
-	FTimerHandle SwitchTimerHandle;
 };
-
-DECLARE_EVENT_OneParam(UChrStateComp, FChrStateCompTickEvent, float)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NORWAYTRAPPED_API UChrStateComp final : public UActorComponent
@@ -78,6 +98,8 @@ public:
 	bool IsOverlapped(float Height) const;
 	void Transit();
 	bool IsSprinting() const { return bSprinting; }
+	void PlayAnimMontage(UAnimMontage* Anim);
+	void SetProneSwitchDelegate();
 
 private:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -87,8 +109,6 @@ private:
 public:
 	class ACharacter* const Owner = nullptr;
 
-	FChrStateCompTickEvent TickEvent;
-
 	UPROPERTY(EditAnywhere)
 	FStateInputData Walk;
 
@@ -96,9 +116,12 @@ public:
 	FStateInputData Sprint;
 
 	UPROPERTY(EditAnywhere)
-	FPostureData Crouch;
+	FPostureSwitchAnimData Stand;
 
 	UPROPERTY(EditAnywhere)
+	FPostureData Crouch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FProneData Prone;
 
 private:
@@ -123,6 +146,7 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Posture, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	EPosture Posture;
+	class FCharacterPosture* PostureState;
 
 	UFUNCTION()
 	void OnRep_Posture();
@@ -130,5 +154,6 @@ private:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetPosture(EPosture NewPosture);
 
-	class FCharacterPosture* PostureState;
+	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UAnimMontage* LastAnim;
 };
