@@ -96,7 +96,7 @@ bool UChrStateComp::ServerSetPosture_Validate(const EPosture NewPosture)
 
 bool UChrStateComp::CanSprint() const
 {
-	return Sprint.bPressed && Owner->GetInputAxisValue("MoveForward") > 0.f;
+	return Sprint.bPressed && !Prone.bSwitching && Owner->GetInputAxisValue("MoveForward") > 0.f;
 }
 
 void UChrStateComp::PlayAnimMontage(UAnimMontage* Anim)
