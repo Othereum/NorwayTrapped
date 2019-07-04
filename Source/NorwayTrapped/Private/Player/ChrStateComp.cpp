@@ -236,8 +236,7 @@ void UChrStateComp::SetCapsuleHalfHeight(const float Height, const float MeshOff
 
 	if (Owner->Role == ROLE_SimulatedProxy)
 	{
-		auto ClientData = Owner->GetCharacterMovement()->GetPredictionData_Client_Character();
-		if (ClientData)
+		if (auto ClientData = Owner->GetCharacterMovement()->GetPredictionData_Client_Character())
 		{
 			ClientData->MeshTranslationOffset = FVector::ZeroVector;
 			ClientData->OriginalMeshTranslationOffset = FVector::ZeroVector;
