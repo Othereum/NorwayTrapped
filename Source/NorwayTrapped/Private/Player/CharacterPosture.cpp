@@ -54,7 +54,9 @@ bool FStand::CanEnter(UChrStateComp* Comp) const
 
 void FStand::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
-	Comp->PlayAnimMontage(Comp->Stand.GetSwitchToAnim(After->GetEnum()));
+	const auto SwitchingTo = After->GetEnum();
+	if (SwitchingTo == EPosture::Prone || FMath::IsNearlyZero(Comp->Owner->GetVelocity().Size()))
+		Comp->PlayAnimMontage(Comp->Stand.GetSwitchToAnim(SwitchingTo));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -103,7 +105,9 @@ bool FCrouch::CanEnter(UChrStateComp* Comp) const
 void FCrouch::Exit(UChrStateComp* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Crouch.SpeedRatio;
-	Comp->PlayAnimMontage(Comp->Crouch.GetSwitchToAnim(After->GetEnum()));
+	const auto SwitchingTo = After->GetEnum();
+	if (SwitchingTo == EPosture::Prone || FMath::IsNearlyZero(Comp->Owner->GetVelocity().Size()))
+		Comp->PlayAnimMontage(Comp->Crouch.GetSwitchToAnim(SwitchingTo));
 }
 
 //////////////////////////////////////////////////////////////////////////
