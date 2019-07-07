@@ -8,16 +8,19 @@
 #include "UnrealNetwork.h"
 
 #include "ChrStateComp.h"
+#include "WeaponComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ANorwayTrappedCharacter
 
 ANorwayTrappedCharacter::ANorwayTrappedCharacter()
 	:Camera{ CreateDefaultSubobject<UCameraComponent>("Camera") },
-	State{ CreateDefaultSubobject<UChrStateComp>("State") }
+	State{ CreateDefaultSubobject<UChrStateComp>("State") },
+	Weapon{ CreateDefaultSubobject<UWeaponComponent>("Weapon") }
 {
 	PrimaryActorTick.bCanEverTick = true;
 	Camera->SetupAttachment(GetMesh(), "Eye");
+	Weapon->SetupAttachment(GetMesh(), "RightHand");
 }
 
 void ANorwayTrappedCharacter::BeginPlay()
