@@ -33,12 +33,9 @@ struct FStateInputData
 };
 
 USTRUCT()
-struct FPostureSwitchAnimData
+struct FStandData
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* ToStand;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* ToCrouch;
@@ -46,7 +43,7 @@ struct FPostureSwitchAnimData
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* ToProne;
 
-	UAnimMontage* GetSwitchToAnim(const EPosture To) const { return (&ToStand)[static_cast<uint8>(To)]; }
+	UAnimMontage* GetSwitchToAnim(const EPosture To) const { return (&ToCrouch)[static_cast<uint8>(To) - 1]; }
 };
 
 USTRUCT()
@@ -90,6 +87,10 @@ class NORWAYTRAPPED_API UChrStateComp final : public UActorComponent
 {
 	GENERATED_BODY()
 
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void BeginPlay() override;
+	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 public:
 	UChrStateComp();
 
@@ -101,12 +102,6 @@ public:
 	void PlayAnimMontage(UAnimMontage* Anim);
 	void SetProneSwitchDelegate();
 
-private:
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void BeginPlay() override;
-	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-public:
 	class ACharacter* const Owner = nullptr;
 
 	UPROPERTY(EditAnywhere)
@@ -116,7 +111,7 @@ public:
 	FStateInputData Sprint;
 
 	UPROPERTY(EditAnywhere)
-	FPostureSwitchAnimData Stand;
+	FStandData Stand;
 
 	UPROPERTY(EditAnywhere)
 	FPostureData Crouch;
@@ -125,6 +120,21 @@ public:
 	FProneData Prone;
 
 private:
+	bool CanSprint() const;
+	void CheckState();
+	void TrySetSprintingAndTransit(bool b);
+	void SetSprinting_Internal(bool b);
+	void ModifyInputScale(float);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetSprinting(bool b);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetPosture(EPosture NewPosture);
+
+	UFUNCTION()
+	void OnRep_Posture();
+
 	void WalkPressed();
 	void WalkReleased();
 	void SprintPressed();
@@ -134,25 +144,12 @@ private:
 	void PronePressed();
 	void ProneReleased();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetSprinting(bool b);
-	void TrySetSprintingAndTransit(bool b);
-	void SetSprinting_Internal(bool b);
-	bool CanSprint() const;
-	void ModifyInputScale(float);
-
 	UPROPERTY(Replicated, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 bSprinting : 1;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Posture, Transient, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	EPosture Posture;
 	class FCharacterPosture* PostureState;
-
-	UFUNCTION()
-	void OnRep_Posture();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetPosture(EPosture NewPosture);
 
 	UPROPERTY(Transient, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	UAnimMontage* LastAnim;

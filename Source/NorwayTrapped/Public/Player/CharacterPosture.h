@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 enum class EPosture : uint8;
+enum class EDirection : uint8;
 class UChrStateComp;
 
 class FCharacterPosture

@@ -22,13 +22,39 @@ void FStateInputData::Release(UChrStateComp* Comp)
 
 void FPostureData::Press(UChrStateComp* Comp)
 {
-	bPressed = bToggle ? (Comp->IsSprinting() ? bPressed : !bPressed) : true;
+	if (!(bToggle && Comp->IsSprinting()))
+	{
+		bPressed = bToggle ? !bPressed : true;
+	}
 }
 
 UChrStateComp::UChrStateComp()
 {
 	bReplicates = true;
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UChrStateComp::BeginPlay()
+{
+	Super::BeginPlay();
+
+	const_cast<ACharacter*&>(Owner) = CastChecked<ACharacter>(GetOwner());
+	PostureState = FCharacterPosture::GetByEnum(Posture);
+}
+
+void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	CheckState();
+}
+
+void UChrStateComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(UChrStateComp, bSprinting, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(UChrStateComp, Posture, COND_SkipOwner);
 }
 
 void UChrStateComp::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -43,6 +69,44 @@ void UChrStateComp::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &UChrStateComp::CrouchReleased);
 	PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &UChrStateComp::PronePressed);
 	PlayerInputComponent->BindAction("Prone", IE_Released, this, &UChrStateComp::ProneReleased);
+}
+
+void UChrStateComp::CheckState()
+{
+	if (Owner->IsLocallyControlled())
+	{
+		if (!bSprinting && CanSprint())
+		{
+			TrySetSprintingAndTransit(true);
+		}
+		else if (bSprinting && !CanSprint())
+		{
+			TrySetSprintingAndTransit(false);
+		}
+		else
+		{
+			Transit();
+		}
+	}
+}
+
+void UChrStateComp::TrySetSprintingAndTransit(const bool b)
+{
+	if (b)
+	{
+		if (Crouch.bToggle) Crouch.bPressed = false;
+		if (Prone.bToggle) Prone.bPressed = false;
+		if (Walk.bToggle) Walk.bPressed = false;
+	}
+	Transit();
+	if (!b || Posture == EPosture::Stand)
+	{
+		SetSprinting_Internal(b);
+		if (Owner->Role == ROLE_AutonomousProxy)
+		{
+			ServerSetSprinting(b);
+		}
+	}
 }
 
 void UChrStateComp::ModifyInputScale(float)
@@ -112,83 +176,6 @@ void UChrStateComp::SetProneSwitchDelegate()
 	Owner->GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(Delegate, LastAnim);
 }
 
-void UChrStateComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(UChrStateComp, bSprinting, COND_SkipOwner);
-	DOREPLIFETIME_CONDITION(UChrStateComp, Posture, COND_SkipOwner);
-}
-
-void UChrStateComp::BeginPlay()
-{
-	Super::BeginPlay();
-
-	const_cast<ACharacter*&>(Owner) = CastChecked<ACharacter>(GetOwner());
-	PostureState = FCharacterPosture::GetByEnum(Posture);
-}
-
-void UChrStateComp::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (Owner->IsLocallyControlled())
-	{
-		if (!bSprinting && CanSprint())
-		{
-			TrySetSprintingAndTransit(true);
-		}
-		else if (bSprinting && !CanSprint())
-		{
-			TrySetSprintingAndTransit(false);
-		}
-		else
-		{
-			Transit();
-		}
-	}
-}
-
-void UChrStateComp::WalkPressed()
-{
-	Walk.Press(this);
-}
-
-void UChrStateComp::WalkReleased()
-{
-	Walk.Release(this);
-}
-
-void UChrStateComp::SprintPressed()
-{
-	Sprint.Press(this);
-}
-
-void UChrStateComp::SprintReleased()
-{
-	Sprint.Release(this);
-}
-
-void UChrStateComp::CrouchPressed()
-{
-	Crouch.Press(this);
-}
-
-void UChrStateComp::CrouchReleased()
-{
-	Crouch.Release(this);
-}
-
-void UChrStateComp::PronePressed()
-{
-	Prone.Press(this);
-}
-
-void UChrStateComp::ProneReleased()
-{
-	Prone.Release(this);
-}
-
 void UChrStateComp::ServerSetSprinting_Implementation(const bool b)
 {
 	SetSprinting_Internal(b);
@@ -197,25 +184,6 @@ void UChrStateComp::ServerSetSprinting_Implementation(const bool b)
 bool UChrStateComp::ServerSetSprinting_Validate(bool)
 {
 	return true;
-}
-
-void UChrStateComp::TrySetSprintingAndTransit(const bool b)
-{
-	if (b)
-	{
-		if (Crouch.bToggle) Crouch.bPressed = false;
-		if (Prone.bToggle) Prone.bPressed = false;
-		if (Walk.bToggle) Walk.bPressed = false;
-	}
-	Transit();
-	if (!b || Posture == EPosture::Stand)
-	{
-		SetSprinting_Internal(b);
-		if (Owner->Role == ROLE_AutonomousProxy)
-		{
-			ServerSetSprinting(b);
-		}
-	}
 }
 
 void UChrStateComp::SetSprinting_Internal(const bool b)
@@ -277,4 +245,44 @@ void UChrStateComp::Transit()
 			ServerSetPosture(Posture);
 		}
 	}
+}
+
+void UChrStateComp::WalkPressed()
+{
+	Walk.Press(this);
+}
+
+void UChrStateComp::WalkReleased()
+{
+	Walk.Release(this);
+}
+
+void UChrStateComp::SprintPressed()
+{
+	Sprint.Press(this);
+}
+
+void UChrStateComp::SprintReleased()
+{
+	Sprint.Release(this);
+}
+
+void UChrStateComp::CrouchPressed()
+{
+	Crouch.Press(this);
+}
+
+void UChrStateComp::CrouchReleased()
+{
+	Crouch.Release(this);
+}
+
+void UChrStateComp::PronePressed()
+{
+	Prone.Press(this);
+}
+
+void UChrStateComp::ProneReleased()
+{
+	Prone.Release(this);
 }
