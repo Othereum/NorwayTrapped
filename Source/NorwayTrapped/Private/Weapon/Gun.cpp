@@ -78,15 +78,31 @@ void AGun::FireR()
 
 void AGun::StartFire()
 {
-	State = EWeaponState::Firing;
-	FireLag = 0.f;
-	Fire();
+	if (bAutomatic) 
+	{
+		State = EWeaponState::Firing;
+		FireLag = 0.f;
+		Fire();
+	}
+	else
+	{
+		const auto CurTime = GetGameTimeSinceCreation();
+		auto& LastFireTime = FireLag;
+		if (CurTime - LastFireTime >= 60.f / Rpm)
+		{
+			LastFireTime = CurTime;
+			Fire();
+		}
+	}
 }
 
 void AGun::StopFire()
 {
-	State = EWeaponState::Idle;
-	FireLag = 0.f;
+	if (bAutomatic)
+	{
+		State = EWeaponState::Idle;
+		FireLag = 0.f;
+	}
 }
 
 void AGun::Reload()
