@@ -1,15 +1,33 @@
 // Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #include "Gun.h"
+#include "Kismet/GameplayStatics.h"
+#include "UnrealNetwork.h"
+
+void AGun::BeginPlay()
+{
+	Super::BeginPlay();
+	const_cast<const AGun*&>(CDO) = GetDefault<AGun>(GetClass());
+}
 
 void AGun::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bAutomatic && State == EWeaponState::Firing)
+	if (bAutomatic && CanFire())
 	{
-		HandleFire(DeltaSeconds);
+		if (bWantsToFire)
+			State = EWeaponState::Firing;
+		if (State == EWeaponState::Firing)
+			HandleFire(DeltaSeconds);
 	}
+}
+
+void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AGun, Clip);
 }
 
 bool AGun::CanFire() const
@@ -19,7 +37,7 @@ bool AGun::CanFire() const
 	case EWeaponState::Idle:
 	case EWeaponState::Firing:
 	case EWeaponState::Reloading:
-		return true;
+		return Clip > 0;
 	default:
 		return false;
 	}
@@ -36,18 +54,42 @@ void AGun::HandleFire(const float DeltaSeconds)
 
 void AGun::Fire()
 {
-	UE_LOG(LogClass, Log, TEXT("Fire!"));
+	--Clip;
+	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 }
 
 void AGun::FireP()
+{
+	bWantsToFire = true;
+	if (CanFire())
+	{
+		StartFire();
+	}
+}
+
+void AGun::FireR()
+{
+	bWantsToFire = false;
+	if (State == EWeaponState::Firing)
+	{
+		StopFire();
+	}
+}
+
+void AGun::StartFire()
 {
 	State = EWeaponState::Firing;
 	FireLag = 0.f;
 	Fire();
 }
 
-void AGun::FireR()
+void AGun::StopFire()
 {
 	State = EWeaponState::Idle;
 	FireLag = 0.f;
+}
+
+void AGun::Reload()
+{
+	Clip = CDO->Clip;
 }
