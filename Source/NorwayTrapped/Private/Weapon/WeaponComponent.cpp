@@ -3,8 +3,8 @@
 #include "WeaponComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
-#include "GameFramework/Character.h"
 #include "UnrealNetwork.h"
+#include "FpsCharacter.h"
 #include "Weapon.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogWeaponComponent, Log, All)
@@ -13,20 +13,14 @@ UWeaponComponent::UWeaponComponent()
 {
 	bReplicates = true;
 	bWantsInitializeComponent = true;
-	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UWeaponComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	const_cast<ACharacter*&>(Owner) = CastChecked<ACharacter>(GetOwner());
+	const_cast<AFpsCharacter*&>(Owner) = CastChecked<AFpsCharacter>(GetOwner());
 	Weapons.Init(nullptr, WeaponSlots);
-}
-
-void UWeaponComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -39,28 +33,60 @@ void UWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void UWeaponComponent::SetupPlayerInputComponent(UInputComponent* Input)
 {
-	TCHAR* Slot = TEXT("Slot0");
+	Input->BindAction("Fire", IE_Pressed, this, &UWeaponComponent::FireP);
+	Input->BindAction("Fire", IE_Released, this, &UWeaponComponent::FireR);
+	Input->BindAction("Aim", IE_Pressed, this, &UWeaponComponent::AimP);
+	Input->BindAction("Aim", IE_Released, this, &UWeaponComponent::AimR);
+	Input->BindAction("Reload", IE_Pressed, this, &UWeaponComponent::Reload);
+
+	FString Slot = TEXT("Slot0");
 	for (uint8 i = 0; i < Weapons.Num(); ++i)
 	{
 		using F = TBaseDelegate<void, uint8>;
 		Slot[4] = TEXT('1') + i;
-		Input->BindAction<F>(Slot, IE_Pressed, this, &UWeaponComponent::SetActiveWeapon, i);
+		Input->BindAction<F>(*Slot, IE_Pressed, this, &UWeaponComponent::ServerSetActiveWeapon, i);
 	}
 }
 
-void UWeaponComponent::SetActiveWeapon(const uint8 Slot)
+void UWeaponComponent::SelectWeapon(const uint8 Slot)
 {
-	if (Slot < Weapons.Num()
-		&& (!Weapons[Active] || Weapons[Active]->Holster(Weapons[Slot]))
-		&& Weapons[Slot] && Weapons[Slot]->Deploy())
+	Active = Slot;
+	Weapons[Slot]->MulticastDeploy();
+}
+
+#define DEFINE_ACTION(Name) void UWeaponComponent::Name() { if (auto W = GetActiveWeapon()) W->Name(); }
+#define DEFINE_PR_ACTION(Name) DEFINE_ACTION(Name##P) DEFINE_ACTION(Name##R)
+
+DEFINE_PR_ACTION(Fire)
+DEFINE_PR_ACTION(Aim)
+DEFINE_ACTION(Reload)
+
+#undef DEFINE_PR_ACTION
+#undef DEFINE_ACTION
+
+void UWeaponComponent::ServerSetActiveWeapon_Implementation(const uint8 Slot)
+{
+	const auto W = GetActiveWeapon();
+	if (Slot < Weapons.Num() && Slot != Active
+		&& (!W || W->CanHolster())
+		&& Weapons[Slot] && Weapons[Slot]->CanDeploy())
 	{
-		Active = Slot;
+		if (W) W->MulticastHolster(Weapons[Slot]);
+		else SelectWeapon(Slot);
 	}
+}
+bool UWeaponComponent::ServerSetActiveWeapon_Validate(const uint8 Slot)
+{
+	return Slot < Weapons.Max();
 }
 
 AWeapon* UWeaponComponent::Give(const TSubclassOf<AWeapon> WeaponClass)
 {
-	if (!WeaponClass) return nullptr;
+	if (!WeaponClass)
+	{
+		UE_LOG(LogWeaponComponent, Error, TEXT("Failed to give weapon: Invalid class"));
+		return nullptr;
+	}
 
 	const auto Slot = GetDefault<AWeapon>(WeaponClass)->GetSlot();
 	if (Slot >= Weapons.Num())
@@ -73,19 +99,26 @@ AWeapon* UWeaponComponent::Give(const TSubclassOf<AWeapon> WeaponClass)
 	Parameters.Owner = Owner;
 	Parameters.Instigator = Owner;
 	const auto Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, Parameters);
-	if (!Weapon) return nullptr;
+	if (!Weapon)
+	{
+		UE_LOG(LogWeaponComponent, Error, TEXT("Failed to give weapon: Can't spawn the weapon"));
+		return nullptr;
+	}
+
+	Weapon->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 	if (Weapons[Slot]) Weapons[Slot]->Destroy();
 	Weapons[Slot] = Weapon;
-	if (Slot == Active) Weapon->Deploy();
-
-	Weapon->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	if (Slot == Active) Weapon->MulticastDeploy();
 
 	return Weapon;
 }
 
-void UWeaponComponent::OnRep_Active(const uint8 Old)
+void UWeaponComponent::OnRep_Weapons()
 {
-	if (Weapons[Old]) Weapons[Old]->Holster(Weapons[Active]);
-	if (Weapons[Active]) Weapons[Active]->Deploy();
+	const auto ActiveWeapon = GetActiveWeapon();
+	if (ActiveWeapon && !ActiveWeapon->IsVisible())
+	{
+		ActiveWeapon->SetVisibility(true);
+	}
 }
