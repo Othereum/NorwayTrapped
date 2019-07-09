@@ -32,11 +32,6 @@ void AWeapon::BeginPlay()
 	}
 }
 
-void AWeapon::Tick(const float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-}
-
 void AWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();

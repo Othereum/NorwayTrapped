@@ -23,9 +23,8 @@ class AWeapon : public AActor
 public:	
 	AWeapon();
 
-private:
+protected:
 	void BeginPlay() override;
-	void Tick(float DeltaSeconds) override;
 	void PostInitializeComponents() override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -56,6 +55,9 @@ protected:
 	virtual void Deploy();
 	virtual void Holster(AWeapon* To);
 
+	UPROPERTY(VisibleInstanceOnly, Replicated, Transient)
+	EWeaponState State;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	FText Name;
@@ -71,9 +73,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 Slot;
-
-	UPROPERTY(VisibleInstanceOnly, Replicated, Transient)
-	EWeaponState State;
 
 	FTimerHandle StateSetTimer;
 };

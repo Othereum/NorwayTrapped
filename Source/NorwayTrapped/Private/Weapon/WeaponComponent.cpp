@@ -54,7 +54,7 @@ void UWeaponComponent::SelectWeapon(const uint8 Slot)
 	Weapons[Slot]->MulticastDeploy();
 }
 
-#define DEFINE_ACTION(Name) void UWeaponComponent::Name() { if (auto W = GetActiveWeapon()) W->Name(); }
+#define DEFINE_ACTION(Name) void UWeaponComponent::Name() { if (auto W = GetActiveWeapon()) { W->Name(); if (!Owner->HasAuthority()) Server##Name(); } } void UWeaponComponent::Server##Name##_Implementation() { Name(); } bool UWeaponComponent::Server##Name##_Validate() { return true; }
 #define DEFINE_PR_ACTION(Name) DEFINE_ACTION(Name##P) DEFINE_ACTION(Name##R)
 
 DEFINE_PR_ACTION(Fire)

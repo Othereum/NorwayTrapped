@@ -43,13 +43,15 @@ public:
 	class AFpsCharacter* const Owner = nullptr;
 
 private:
-#define DECLARE_ACTION(Name) void Name();
-#define DECLARE_PR_ACTION(Name) DECLARE_ACTION(Name##P) DECLARE_ACTION(Name##R)
-	DECLARE_PR_ACTION(Aim)
-	DECLARE_PR_ACTION(Fire)
-	DECLARE_ACTION(Reload)
-#undef DECLARE_PR_ACTION
-#undef DECLARE_ACTION
+	void AimP(); void AimR();
+	void FireP(); void FireR();
+	void Reload();
+
+	UFUNCTION(Server, Reliable, WithValidation) void ServerFireP();
+	UFUNCTION(Server, Reliable, WithValidation) void ServerFireR();
+	UFUNCTION(Server, Reliable, WithValidation) void ServerAimP();
+	UFUNCTION(Server, Reliable, WithValidation) void ServerAimR();
+	UFUNCTION(Server, Reliable, WithValidation) void ServerReload();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetActiveWeapon(uint8 Slot);
