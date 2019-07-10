@@ -73,13 +73,10 @@ void AWeapon::SetVisibility(const bool bNewVisibility) const
 
 void AWeapon::Deploy()
 {
-	Mesh->SetVisibility(true);
 	PlayAnim(DeployAnim, DeployTime);
-	if (HasAuthority())
-	{
-		State = EWeaponState::Deploying;
-		GetWorldTimerManager().SetTimer(StateSetTimer, [this] { State = EWeaponState::Idle; }, DeployTime, false);
-	}
+	if (HasAuthority()) State = EWeaponState::Deploying;
+	Mesh->SetVisibility(true);
+	if (HasAuthority()) GetWorldTimerManager().SetTimer(StateSetTimer, [this] { State = EWeaponState::Idle; }, DeployTime, false);
 }
 
 bool AWeapon::CanDeploy() const

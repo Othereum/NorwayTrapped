@@ -42,9 +42,10 @@ public:
 
 	class AFpsCharacter* const Owner = nullptr;
 
+	void FireR();
 private:
 	void AimP(); void AimR();
-	void FireP(); void FireR();
+	void FireP();
 	void Reload();
 
 	UFUNCTION(Server, Reliable, WithValidation) void ServerFireP();

@@ -58,14 +58,13 @@ public:
 protected:
 	virtual void Deploy();
 	virtual void Holster(AWeapon* To);
+	void PlayAnim(UAnimMontage* Anim, float Time) const;
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly)
 	EWeaponState State;
 
 private:
-	void PlayAnim(UAnimMontage* Anim, float Time) const;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	FText Name;
 
 	UPROPERTY(EditDefaultsOnly)

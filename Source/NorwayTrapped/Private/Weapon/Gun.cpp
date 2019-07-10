@@ -1,10 +1,14 @@
 // Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #include "Gun.h"
+#include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "UnrealNetwork.h"
 #include "FpsCharacter.h"
+#include "PostureComponent.h"
 
 void AGun::BeginPlay()
 {
@@ -16,7 +20,9 @@ void AGun::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bAutomatic && CanFire())
+	if (!bWantsToFire && State == EWeaponState::Firing)
+		State = EWeaponState::Idle;
+	else if (bAutomatic && CanFire())
 	{
 		if (bWantsToFire)
 			State = EWeaponState::Firing;
@@ -39,7 +45,7 @@ bool AGun::CanFire() const
 	case EWeaponState::Idle:
 	case EWeaponState::Firing:
 	case EWeaponState::Reloading:
-		return Clip > 0;
+		return Clip > 0 && GetWorld()->GetTimeSeconds() - LastFire >= 60.f / Rpm;
 	default:
 		return false;
 	}
@@ -56,10 +62,14 @@ void AGun::HandleFire(const float DeltaSeconds)
 
 void AGun::Fire()
 {
+	// Cancel reload
+	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
+
 	Owner->PlayAnimMontage(FireAnim);
 	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
 	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
+	Shoot();
 	if (Role != ROLE_SimulatedProxy)
 	{
 		--Clip;
@@ -68,6 +78,10 @@ void AGun::Fire()
 
 void AGun::FireP()
 {
+	if (Owner->IsLocallyControlled())
+	{
+		Owner->GetPosture()->Sprint.bPressed = false;
+	}
 	bWantsToFire = true;
 	if (CanFire())
 	{
@@ -90,18 +104,8 @@ void AGun::StartFire()
 	{
 		State = EWeaponState::Firing;
 		FireLag = 0.f;
-		Fire();
 	}
-	else
-	{
-		const auto CurTime = GetGameTimeSinceCreation();
-		auto& LastFireTime = FireLag;
-		if (CurTime - LastFireTime >= 60.f / Rpm)
-		{
-			LastFireTime = CurTime;
-			Fire();
-		}
-	}
+	Fire();
 }
 
 void AGun::StopFire()
@@ -115,5 +119,27 @@ void AGun::StopFire()
 
 void AGun::Reload()
 {
-	Clip = CDO->Clip;
+	if (HasAuthority()) State = EWeaponState::Reloading;
+	PlayAnim(ReloadAnim, ReloadTime);
+	GetWorldTimerManager().SetTimer(ReloadTimerHandle, [this]
+	{
+		if (HasAuthority())
+		{
+			Clip = CDO->Clip;
+			State = EWeaponState::Idle;
+		}
+	}, ReloadTime, false);
+}
+
+void AGun::Shoot()
+{
+	const auto Start = GetMesh()->GetSocketLocation("Muzzle");
+	const auto End = Owner->GetCamera()->GetComponentLocation() + Owner->GetBaseAimRotation().Vector() * 100000.f;
+
+	FHitResult HitResult;
+	if (GetWorld()->LineTraceSingleByProfile(HitResult, Start, End, "Projectile"))
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(this, Impact, HitResult.Location + HitResult.Normal, HitResult.Normal.Rotation(),
+			true, EPSCPoolMethod::AutoRelease);
+	}
 }

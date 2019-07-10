@@ -1,14 +1,16 @@
 // Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #include "PostureComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UnrealNetwork.h"
 #include "CharacterPosture.h"
-#include "Animation/AnimInstance.h"
+#include "FpsCharacter.h"
+#include "Gun.h"
+#include "WeaponComponent.h"
 
 void FStateInputData::Press(UPostureComponent* Comp)
 {
@@ -18,6 +20,12 @@ void FStateInputData::Press(UPostureComponent* Comp)
 void FStateInputData::Release(UPostureComponent* Comp)
 {
 	if (!bToggle) bPressed = false;
+}
+
+void FSprintData::Press(UPostureComponent* Comp)
+{
+	Comp->Owner->GetWeapon()->FireR();
+	Super::Press(Comp);
 }
 
 void FPostureData::Press(UPostureComponent* Comp)
@@ -38,7 +46,7 @@ void UPostureComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const_cast<ACharacter*&>(Owner) = CastChecked<ACharacter>(GetOwner());
+	const_cast<AFpsCharacter*&>(Owner) = CastChecked<AFpsCharacter>(GetOwner());
 	PostureState = FCharacterPosture::GetByEnum(Posture);
 }
 

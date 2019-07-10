@@ -25,10 +25,24 @@ public:
 	UCameraComponent* GetCamera() const { return Camera; }
 	UPostureComponent* GetPosture() const { return Posture; }
 	UWeaponComponent* GetWeapon() const { return Weapon; }
+	float GetHp() const { return Hp; }
+	bool IsAlive() const { return bAlive; }
+
+	virtual void Kill();
+
+protected:
+	void SetupPlayerInputComponent(class UInputComponent* Input) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	bool ShouldTakeDamage(float Damage, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const override;
 
 private:
-	void SetupPlayerInputComponent(class UInputComponent* Input) override;
-
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	float Hp = 100;
+
+	UPROPERTY(VisibleInstanceOnly, Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	uint8 bAlive : 1;
 };

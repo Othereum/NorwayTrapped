@@ -24,19 +24,19 @@ class AGun final : public AWeapon
 	void StopFire();
 	void Reload() override;
 
+	void Shoot();
+
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	uint8 Clip;
 
-	UPROPERTY(EditAnywhere)
-	uint8 bAutomatic : 1;
-
-	uint8 bWantsToFire : 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess=true, ClampMin = 1, UIMin = 1, UIMax = 1500))
 	float Rpm = 750;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	float ReloadTime;
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* FireSound;
@@ -45,9 +45,22 @@ class AGun final : public AWeapon
 	UParticleSystem* MuzzleFlash;
 
 	UPROPERTY(EditAnywhere)
+	UParticleSystem* Impact;
+
+	UPROPERTY(EditAnywhere)
 	UAnimMontage* FireAnim;
 	
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ReloadAnim;
+	
 	float FireLag;
+	float LastFire;
+	FTimerHandle ReloadTimerHandle;
 
+	UPROPERTY(EditAnywhere)
+	uint8 bAutomatic : 1;
+
+public:
+	uint8 bWantsToFire : 1;
 	const AGun* const CDO = nullptr;
 };

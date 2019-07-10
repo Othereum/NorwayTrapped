@@ -2,8 +2,8 @@
 
 #include "CharacterPosture.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "FpsCharacter.h"
 #include "PostureComponent.h"
 
 static FStand GStand;

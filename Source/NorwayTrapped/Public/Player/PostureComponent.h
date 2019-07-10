@@ -33,6 +33,13 @@ struct FStateInputData
 };
 
 USTRUCT()
+struct FSprintData : public FStateInputData
+{
+	GENERATED_BODY()
+	void Press(UPostureComponent* Comp);
+};
+
+USTRUCT()
 struct FStandData
 {
 	GENERATED_BODY()
@@ -116,13 +123,13 @@ public:
 	void PlayAnimMontage(UAnimMontage* Anim);
 	void SetProneSwitchDelegate();
 
-	class ACharacter* const Owner = nullptr;
+	class AFpsCharacter* const Owner = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	FStateInputData Walk;
 
 	UPROPERTY(EditAnywhere)
-	FStateInputData Sprint;
+	FSprintData Sprint;
 
 	UPROPERTY(EditAnywhere)
 	FStandData Stand;
