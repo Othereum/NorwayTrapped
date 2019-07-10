@@ -52,6 +52,11 @@ private:
 	UFUNCTION(Server, Reliable, WithValidation) void ServerAimP();
 	UFUNCTION(Server, Reliable, WithValidation) void ServerAimR();
 	UFUNCTION(Server, Reliable, WithValidation) void ServerReload();
+	UFUNCTION(NetMulticast, Reliable) void MulticastFireP();
+	UFUNCTION(NetMulticast, Reliable) void MulticastFireR();
+	UFUNCTION(NetMulticast, Reliable) void MulticastAimP();
+	UFUNCTION(NetMulticast, Reliable) void MulticastAimR();
+	UFUNCTION(NetMulticast, Reliable) void MulticastReload();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetActiveWeapon(uint8 Slot);

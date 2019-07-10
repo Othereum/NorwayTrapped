@@ -14,6 +14,7 @@ class AGun final : public AWeapon
 	void BeginPlay() override;
 	void Tick(float DeltaSeconds) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	bool CanFire() const;
 	void HandleFire(float DeltaSeconds);
 	void Fire();
@@ -42,13 +43,8 @@ class AGun final : public AWeapon
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* MuzzleFlash;
-
+	
 	float FireLag;
 
 	const AGun* const CDO = nullptr;
-
-public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnFire();
-
 };

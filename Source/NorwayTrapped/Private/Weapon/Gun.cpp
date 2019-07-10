@@ -55,11 +55,13 @@ void AGun::HandleFire(const float DeltaSeconds)
 
 void AGun::Fire()
 {
-	--Clip;
+	if (Role != ROLE_SimulatedProxy)
+	{
+		--Clip;
+	}
 	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
 	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
-	OnFire();
 }
 
 void AGun::FireP()

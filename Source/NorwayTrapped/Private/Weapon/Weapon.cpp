@@ -23,13 +23,17 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	const_cast<AFpsCharacter*&>(Owner) = CastChecked<AFpsCharacter>(GetOwner());
-	Role = Owner->Role;
-	CopyRemoteRoleFrom(Owner);
 
 	if (!HasAuthority() && State == EWeaponState::NeverDeployed && Owner->GetWeapon()->GetActiveWeapon() == this)
 	{
 		Deploy();
 	}
+}
+
+void AWeapon::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	Role = Owner->Role;
 }
 
 void AWeapon::PostInitializeComponents()
