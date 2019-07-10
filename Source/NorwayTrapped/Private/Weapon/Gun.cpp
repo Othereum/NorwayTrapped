@@ -4,6 +4,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UnrealNetwork.h"
+#include "FpsCharacter.h"
 
 void AGun::BeginPlay()
 {
@@ -55,13 +56,14 @@ void AGun::HandleFire(const float DeltaSeconds)
 
 void AGun::Fire()
 {
+	Owner->PlayAnimMontage(FireAnim);
+	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
+	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
 	if (Role != ROLE_SimulatedProxy)
 	{
 		--Clip;
 	}
-	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
-	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
 }
 
 void AGun::FireP()

@@ -43,6 +43,9 @@ class AGun final : public AWeapon
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* FireAnim;
 	
 	float FireLag;
 
