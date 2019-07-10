@@ -6,11 +6,13 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
 	NeverDeployed, Deploying, Idle, Firing, Reloading, Holstering, Unequipped
 };
+
+class UAnimMontage;
 
 UCLASS()
 class AWeapon : public AActor
@@ -57,10 +59,12 @@ protected:
 	virtual void Deploy();
 	virtual void Holster(AWeapon* To);
 
-	UPROPERTY(VisibleInstanceOnly, Replicated, Transient)
+	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly)
 	EWeaponState State;
 
 private:
+	void PlayAnim(UAnimMontage* Anim, float Time) const;
+
 	UPROPERTY(EditDefaultsOnly)
 	FText Name;
 
@@ -75,6 +79,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	uint8 Slot;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UAnimMontage* DeployAnim;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UAnimMontage* HolsterAnim;
 
 	FTimerHandle StateSetTimer;
 };

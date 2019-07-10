@@ -2,6 +2,8 @@
 
 #include "Weapon.h"
 
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "TimerManager.h"
 #include "UnrealNetwork.h"
@@ -30,7 +32,7 @@ void AWeapon::BeginPlay()
 	}
 }
 
-void AWeapon::Tick(float DeltaSeconds)
+void AWeapon::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	Role = Owner->Role;
@@ -72,6 +74,7 @@ void AWeapon::SetVisibility(const bool bNewVisibility) const
 void AWeapon::Deploy()
 {
 	Mesh->SetVisibility(true);
+	PlayAnim(DeployAnim, DeployTime);
 	if (HasAuthority())
 	{
 		State = EWeaponState::Deploying;
@@ -94,6 +97,7 @@ bool AWeapon::CanDeploy() const
 void AWeapon::Holster(AWeapon* To)
 {
 	if (HasAuthority()) State = EWeaponState::Holstering;
+	PlayAnim(HolsterAnim, HolsterTime);
 	const auto ToSlot = To->GetSlot();
 	GetWorldTimerManager().SetTimer(StateSetTimer, [this, ToSlot]
 	{
@@ -104,6 +108,18 @@ void AWeapon::Holster(AWeapon* To)
 			Owner->GetWeapon()->SelectWeapon(ToSlot);
 		}
 	}, HolsterTime, false);
+}
+
+void AWeapon::PlayAnim(UAnimMontage* Anim, const float Time) const
+{
+	if (Owner && Anim)
+	{
+		const auto AnimLength = Anim->SequenceLength - Anim->BlendOut.GetBlendTime();
+		if (AnimLength > 0.f)
+		{
+			Owner->PlayAnimMontage(Anim, AnimLength / Time);
+		}
+	}
 }
 
 bool AWeapon::CanHolster() const
