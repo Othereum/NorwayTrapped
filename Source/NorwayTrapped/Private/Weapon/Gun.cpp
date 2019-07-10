@@ -1,6 +1,7 @@
 // Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #include "Gun.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UnrealNetwork.h"
 
@@ -56,6 +57,9 @@ void AGun::Fire()
 {
 	--Clip;
 	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
+	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
+	OnFire();
 }
 
 void AGun::FireP()

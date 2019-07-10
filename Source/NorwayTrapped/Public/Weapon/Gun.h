@@ -34,13 +34,21 @@ class AGun final : public AWeapon
 
 	uint8 bWantsToFire : 1;
 
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 1, UIMin = 1, UIMax = 1500))
-	float Rpm = 600;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess=true, ClampMin = 1, UIMin = 1, UIMax = 1500))
+	float Rpm = 750;
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* FireSound;
 
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MuzzleFlash;
+
 	float FireLag;
 
 	const AGun* const CDO = nullptr;
+
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnFire();
+
 };

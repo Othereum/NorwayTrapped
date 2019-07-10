@@ -46,6 +46,7 @@ public:
 
 	uint8 GetSlot() const { return Slot; }
 	EWeaponState GetState() const { return State; }
+	USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	bool IsVisible() const;
 	void SetVisibility(bool bNewVisibility) const;
 
