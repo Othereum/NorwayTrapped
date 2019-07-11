@@ -30,6 +30,9 @@ public:
 
 	virtual void Kill();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastKill();
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnKill();
 

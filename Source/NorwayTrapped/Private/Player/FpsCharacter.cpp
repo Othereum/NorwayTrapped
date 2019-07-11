@@ -72,13 +72,18 @@ void AFpsCharacter::Kill()
 	OnKill();
 }
 
+void AFpsCharacter::MulticastKill_Implementation()
+{
+	Kill();
+}
+
 float AFpsCharacter::TakeDamage(const float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const auto Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	if (Damage > 0.f)
 	{
 		Hp -= Damage;
-		if (Hp <= 0.f) Kill();
+		if (Hp <= 0.f) MulticastKill();
 	}
 	return Damage;
 }
