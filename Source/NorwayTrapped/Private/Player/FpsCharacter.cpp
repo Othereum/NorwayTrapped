@@ -79,9 +79,17 @@ void AFpsCharacter::MulticastKill_Implementation()
 
 float AFpsCharacter::TakeDamage(const float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	const auto Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	auto Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	if (Damage > 0.f)
 	{
+		FHitResult Hit;
+		FVector ImpulseDir;
+		DamageEvent.GetBestHitInfo(this, DamageCauser, Hit, ImpulseDir);
+		if (Hit.BoneName != NAME_None && HitBoneDmgMul.Contains(Hit.BoneName))
+		{
+			Damage *= HitBoneDmgMul[Hit.BoneName];
+		}
+
 		Hp -= Damage;
 		if (Hp <= 0.f) MulticastKill();
 	}

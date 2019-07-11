@@ -46,6 +46,9 @@ private:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
+	UPROPERTY(EditAnywhere)
+	TMap<FName, float> HitBoneDmgMul;
+
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	float Hp = 100;
 
