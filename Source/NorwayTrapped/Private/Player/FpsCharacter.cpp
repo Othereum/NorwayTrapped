@@ -17,6 +17,7 @@ AFpsCharacter::AFpsCharacter()
 	Weapon{ CreateDefaultSubobject<UWeaponComponent>("Weapon") },
 	bAlive{ true }
 {
+	GetMesh()->bReturnMaterialOnMove = true;
 	Camera->SetupAttachment(GetMesh(), "Eye");
 	Weapon->SetupAttachment(GetMesh(), "RightHand");
 }
@@ -68,17 +69,21 @@ void AFpsCharacter::Kill()
 {
 	Hp = 0.f;
 	bAlive = false;
+	OnKill();
 }
 
 float AFpsCharacter::TakeDamage(const float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const auto Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	Hp -= Damage;
-	if (Hp <= 0.f) Kill();
+	if (Damage > 0.f)
+	{
+		Hp -= Damage;
+		if (Hp <= 0.f) Kill();
+	}
 	return Damage;
 }
 
-bool AFpsCharacter::ShouldTakeDamage(float, const FDamageEvent&, AController*, AActor*) const
+bool AFpsCharacter::ShouldTakeDamage(const float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const
 {
-	return bAlive;
+	return bAlive && Super::ShouldTakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }

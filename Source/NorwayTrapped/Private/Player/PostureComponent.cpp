@@ -9,7 +9,6 @@
 #include "UnrealNetwork.h"
 #include "CharacterPosture.h"
 #include "FpsCharacter.h"
-#include "Gun.h"
 #include "WeaponComponent.h"
 
 void FStateInputData::Press(UPostureComponent* Comp)

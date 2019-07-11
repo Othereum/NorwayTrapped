@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
 #include "UnrealNetwork.h"
 #include "FpsCharacter.h"
@@ -133,13 +134,43 @@ void AGun::Reload()
 
 void AGun::Shoot()
 {
-	const auto Start = GetMesh()->GetSocketLocation("Muzzle");
-	const auto End = Owner->GetCamera()->GetComponentLocation() + Owner->GetBaseAimRotation().Vector() * 100000.f;
+	const auto CameraLocation = Owner->GetCamera()->GetComponentLocation();
+	const auto CameraEnd = CameraLocation + Owner->GetBaseAimRotation().Vector() * MaxRange;
 
-	FHitResult HitResult;
-	if (GetWorld()->LineTraceSingleByProfile(HitResult, Start, End, "Projectile"))
+	static const FName CollisionProfile = "Projectile";
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(Owner);
+
+	FHitResult CameraHit;
+	if (GetWorld()->LineTraceSingleByProfile(CameraHit, CameraLocation, CameraEnd, CollisionProfile, QueryParams))
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, Impact, HitResult.Location + HitResult.Normal, HitResult.Normal.Rotation(),
-			true, EPSCPoolMethod::AutoRelease);
+		const auto MuzzleLocation = GetMesh()->GetSocketLocation("Muzzle");
+
+		QueryParams.bReturnPhysicalMaterial = true;
+
+		auto ShotDir = CameraHit.Location - MuzzleLocation;
+		ShotDir.Normalize();
+
+		FHitResult BulletHit;
+		if (GetWorld()->LineTraceSingleByProfile(BulletHit, MuzzleLocation, CameraHit.Location + ShotDir, CollisionProfile, QueryParams))
+		{
+			if (const auto HitActor = BulletHit.GetActor())
+			{
+				HitActor->TakeDamage(Damage, FPointDamageEvent{
+					Damage, BulletHit, ShotDir, DamageType
+				}, Owner->Controller, this);
+			}
+
+			const auto PhysMat = BulletHit.PhysMaterial.Get();
+			if (PhysMat && Impact.Contains(PhysMat->SurfaceType))
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(this, Impact[PhysMat->SurfaceType],
+				                                         BulletHit.Location + BulletHit.Normal,
+				                                         BulletHit.Normal.Rotation(), true,
+				                                         EPSCPoolMethod::AutoRelease);
+			}
+		}
 	}
 }

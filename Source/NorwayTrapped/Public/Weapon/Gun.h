@@ -38,6 +38,12 @@ class AGun final : public AWeapon
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	float ReloadTime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	float MaxRange = 50000;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UDamageType> DamageType;
+
 	UPROPERTY(EditAnywhere)
 	USoundBase* FireSound;
 
@@ -45,7 +51,7 @@ class AGun final : public AWeapon
 	UParticleSystem* MuzzleFlash;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* Impact;
+	TMap<TEnumAsByte<EPhysicalSurface>, UParticleSystem*> Impact;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FireAnim;
