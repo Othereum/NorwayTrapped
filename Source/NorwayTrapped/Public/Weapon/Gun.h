@@ -67,6 +67,9 @@ class AGun final : public AWeapon
 	uint8 bAutomatic : 1;
 
 public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnFire();
+
 	uint8 bWantsToFire : 1;
 	const AGun* const CDO = nullptr;
 };

@@ -116,12 +116,16 @@ private:
 
 public:
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
-	void SetCapsuleHalfHeight(float Height, float MeshOffset = 0.f) const;
-	bool IsOverlapped(float Height) const;
+
 	void Transit();
-	bool IsSprinting() const { return bSprinting; }
 	void PlayAnimMontage(UAnimMontage* Anim);
 	void SetProneSwitchDelegate();
+
+	void SetCapsuleHalfHeight(float Height, float MeshOffset = 0.f) const;
+	bool IsOverlapped(float Height) const;
+
+	bool IsSprinting() const { return bSprinting; }
+	EPosture GetPostureEnum() const { return Posture; }
 
 	class AFpsCharacter* const Owner = nullptr;
 

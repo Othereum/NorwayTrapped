@@ -86,9 +86,7 @@ float AFpsCharacter::TakeDamage(const float DamageAmount, const FDamageEvent& Da
 		FVector ImpulseDir;
 		DamageEvent.GetBestHitInfo(this, DamageCauser, Hit, ImpulseDir);
 		if (Hit.BoneName != NAME_None && HitBoneDmgMul.Contains(Hit.BoneName))
-		{
 			Damage *= HitBoneDmgMul[Hit.BoneName];
-		}
 
 		Hp -= Damage;
 		if (Hp <= 0.f) MulticastKill();

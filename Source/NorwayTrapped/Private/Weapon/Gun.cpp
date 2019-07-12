@@ -75,6 +75,8 @@ void AGun::Fire()
 	{
 		--Clip;
 	}
+
+	OnFire();
 }
 
 void AGun::FireP()
