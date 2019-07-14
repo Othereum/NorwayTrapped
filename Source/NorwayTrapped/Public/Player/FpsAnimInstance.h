@@ -15,6 +15,12 @@ class UFpsAnimInstance : public UAnimInstance
 protected:
 	void NativeUpdateAnimation(float DeltaSeconds) override;
 
+	UPROPERTY(EditAnywhere)
+	FName WeaponLeftHandIKSocketName = "IK_LeftHand";
+
+	UPROPERTY(EditAnywhere)
+	FName RightHandBoneName = "RightHand";
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Speed;
 
