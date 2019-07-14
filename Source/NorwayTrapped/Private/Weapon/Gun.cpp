@@ -3,8 +3,6 @@
 #include "Gun.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
@@ -17,7 +15,6 @@ void AGun::BeginPlay()
 {
 	Super::BeginPlay();
 	const_cast<const AGun*&>(CDO) = GetDefault<AGun>(GetClass());
-	Clip += bChamber;
 }
 
 void AGun::Tick(const float DeltaSeconds)
@@ -66,10 +63,13 @@ void AGun::HandleFire(const float DeltaSeconds)
 
 void AGun::Fire()
 {
-	CancelReload();
-	Owner->PlayAnimMontage(FireAnim3P);
-	GetMesh()->PlayAnimation(FireAnim, false);
+	// Cancel reload
+	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
 
+	Owner->PlayAnimMontage(FireAnim);
+	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetMesh(), "Muzzle", FVector::ZeroVector, FRotator::ZeroRotator,
+	                                       EAttachLocation::SnapToTarget, true, EPSCPoolMethod::AutoRelease);
 	Shoot();
 	if (Role != ROLE_SimulatedProxy)
 	{
@@ -122,53 +122,16 @@ void AGun::StopFire()
 
 void AGun::Reload()
 {
-	if (!CanReload()) return;
-
-	FireR();
 	if (HasAuthority()) State = EWeaponState::Reloading;
-
-	UAnimMontage* Anim;
-	float Time;
-
-	const auto bTactical = Clip && bChamber;
-	if (bTactical)
-	{
-		Anim = TacticalReloadAnim3P;
-		Time = TacticalReloadTime;
-	}
-	else
-	{
-		Anim = FullReloadAnim3P;
-		Time = FullReloadTime;
-	}
-
-	PlayAnim(Anim, Time);
-	GetWorldTimerManager().SetTimer(ReloadTimerHandle, [this, bTactical]
+	PlayAnim(ReloadAnim, ReloadTime);
+	GetWorldTimerManager().SetTimer(ReloadTimerHandle, [this]
 	{
 		if (HasAuthority())
 		{
-			Clip = CDO->Clip + bTactical;
+			Clip = CDO->Clip;
 			State = EWeaponState::Idle;
 		}
-	}, Time, false);
-}
-
-bool AGun::CanReload() const
-{
-	switch (State)
-	{
-	case EWeaponState::Idle:
-	case EWeaponState::Firing:
-		return Clip < CDO->Clip + bChamber;
-	default:
-		return false;
-	}
-}
-
-void AGun::CancelReload()
-{
-	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
-	if (MagazineRef) MagazineRef->Destroy();
+	}, ReloadTime, false);
 }
 
 void AGun::Shoot()
@@ -176,14 +139,16 @@ void AGun::Shoot()
 	const auto CameraLocation = Owner->GetCamera()->GetComponentLocation();
 	const auto CameraEnd = CameraLocation + Owner->GetBaseAimRotation().Vector() * MaxRange;
 
+	static const FName CollisionProfile = "Projectile";
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(Owner);
 
 	FHitResult CameraHit;
-	if (GetWorld()->LineTraceSingleByProfile(CameraHit, CameraLocation, CameraEnd, BulletCollisionProfileName, QueryParams))
+	if (GetWorld()->LineTraceSingleByProfile(CameraHit, CameraLocation, CameraEnd, CollisionProfile, QueryParams))
 	{
-		const auto MuzzleLocation = GetMesh()->GetSocketLocation(MuzzleSocketName);
+		const auto MuzzleLocation = GetMesh()->GetSocketLocation("Muzzle");
 
 		QueryParams.bReturnPhysicalMaterial = true;
 
@@ -191,7 +156,7 @@ void AGun::Shoot()
 		ShotDir.Normalize();
 
 		FHitResult BulletHit;
-		if (GetWorld()->LineTraceSingleByProfile(BulletHit, MuzzleLocation, CameraHit.Location + ShotDir, BulletCollisionProfileName, QueryParams))
+		if (GetWorld()->LineTraceSingleByProfile(BulletHit, MuzzleLocation, CameraHit.Location + ShotDir, CollisionProfile, QueryParams))
 		{
 			if (const auto HitActor = BulletHit.GetActor())
 			{
@@ -210,41 +175,4 @@ void AGun::Shoot()
 			}
 		}
 	}
-}
-
-void AGun::DropMag() const
-{
-	if (!EmptyMagazineClass) return;
-	if (const auto DroppedMag = GetWorld()->SpawnActor<AStaticMeshActor>(EmptyMagazineClass, GetMesh()->GetSocketTransform(MagazineSocketName)))
-	{
-		DroppedMag->GetStaticMeshComponent()->SetStaticMesh(EmptyMagazineMesh);
-	}
-}
-
-void AGun::GrabMag() const
-{
-	MagazineRef = GetWorld()->SpawnActor<AStaticMeshActor>(MagazineClass);
-	if (MagazineRef)
-	{
-		MagazineRef->AttachToComponent(Owner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, MagazineSocketName);
-	}
-}
-
-void AGun::MagIn() const
-{
-	GetMesh()->PlayAnimation(reinterpret_cast<UAnimationAsset*>(MagInAnim), false);
-	if (MagazineRef)
-	{
-		MagazineRef->Destroy();
-	}
-}
-
-void AGun::MagOut() const
-{
-	GetMesh()->PlayAnimation(reinterpret_cast<UAnimationAsset*>(MagOutAnim), false);
-}
-
-void AGun::Bolt() const
-{
-	GetMesh()->PlayAnimation(reinterpret_cast<UAnimationAsset*>(BoltAnim), false);
 }

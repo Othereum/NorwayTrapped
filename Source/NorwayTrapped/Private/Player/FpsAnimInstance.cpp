@@ -18,10 +18,10 @@ void UFpsAnimInstance::NativeUpdateAnimation(float)
 
 	if (const auto Wep = Owner->GetWeapon()->GetActiveWeapon())
 	{
-		const auto LeftHand = Wep->GetMesh()->GetSocketTransform(WeaponLeftHandIKSocketName);
+		const auto LeftHand = Wep->GetMesh()->GetSocketTransform("IK_LeftHand");
 		FVector IKLocation;
 		FRotator IKRotation;
-		Owner->GetMesh()->TransformToBoneSpace(RightHandBoneName, LeftHand.GetLocation(), LeftHand.GetRotation().Rotator(),
+		Owner->GetMesh()->TransformToBoneSpace("RightHand", LeftHand.GetLocation(), LeftHand.GetRotation().Rotator(),
 		                                       IKLocation, IKRotation);
 		LeftHandIK.SetLocation(IKLocation);
 		LeftHandIK.SetRotation(IKRotation.Quaternion());
