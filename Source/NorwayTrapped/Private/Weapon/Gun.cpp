@@ -167,9 +167,12 @@ bool AGun::CanReload() const
 
 void AGun::CancelReload()
 {
-	GetMesh()->Stop();
+	Owner->StopAnimMontage(TacticalReloadAnim3P);
+	Owner->StopAnimMontage(FullReloadAnim3P);
+	StopWepAnim(0.f, MagOutAnim);
 	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
 	if (MagazineRef) MagazineRef->Destroy();
+	State = EWeaponState::Idle;
 }
 
 void AGun::Shoot()

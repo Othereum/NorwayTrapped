@@ -128,6 +128,14 @@ void AWeapon::PlayWepAnim(UAnimMontage* Anim) const
 	}
 }
 
+void AWeapon::StopWepAnim(const float BlendOutTime, UAnimMontage* Anim) const
+{
+	if (const auto AnimInstance = Mesh->GetAnimInstance())
+	{
+		AnimInstance->Montage_Stop(BlendOutTime, Anim);
+	}
+}
+
 bool AWeapon::CanHolster() const
 {
 	switch (State)

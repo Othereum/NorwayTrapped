@@ -60,6 +60,7 @@ protected:
 	virtual void Holster(AWeapon* To);
 	void PlayOwnerAnim(UAnimMontage* Anim, float Time, bool bConsiderBlendOutTime = true) const;
 	void PlayWepAnim(UAnimMontage* Anim) const;
+	void StopWepAnim(float BlendOutTime, UAnimMontage* Anim = nullptr) const;
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly)
 	EWeaponState State;
