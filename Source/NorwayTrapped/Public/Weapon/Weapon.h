@@ -58,7 +58,8 @@ public:
 protected:
 	virtual void Deploy();
 	virtual void Holster(AWeapon* To);
-	void PlayAnim(UAnimMontage* Anim, float Time) const;
+	void PlayOwnerAnim(UAnimMontage* Anim, float Time) const;
+	void PlayWepAnim(UAnimMontage* Anim) const;
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly)
 	EWeaponState State;

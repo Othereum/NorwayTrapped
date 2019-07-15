@@ -73,7 +73,7 @@ void AWeapon::SetVisibility(const bool bNewVisibility) const
 
 void AWeapon::Deploy()
 {
-	PlayAnim(DeployAnim, DeployTime);
+	PlayOwnerAnim(DeployAnim, DeployTime);
 	if (HasAuthority()) State = EWeaponState::Deploying;
 	Mesh->SetVisibility(true);
 	if (HasAuthority()) GetWorldTimerManager().SetTimer(StateSetTimer, [this] { State = EWeaponState::Idle; }, DeployTime, false);
@@ -94,7 +94,7 @@ bool AWeapon::CanDeploy() const
 void AWeapon::Holster(AWeapon* To)
 {
 	if (HasAuthority()) State = EWeaponState::Holstering;
-	PlayAnim(HolsterAnim, HolsterTime);
+	PlayOwnerAnim(HolsterAnim, HolsterTime);
 	const auto ToSlot = To->GetSlot();
 	GetWorldTimerManager().SetTimer(StateSetTimer, [this, ToSlot]
 	{
@@ -107,7 +107,7 @@ void AWeapon::Holster(AWeapon* To)
 	}, HolsterTime, false);
 }
 
-void AWeapon::PlayAnim(UAnimMontage* Anim, const float Time) const
+void AWeapon::PlayOwnerAnim(UAnimMontage* Anim, const float Time) const
 {
 	if (Owner && Anim)
 	{
@@ -116,6 +116,14 @@ void AWeapon::PlayAnim(UAnimMontage* Anim, const float Time) const
 		{
 			Owner->PlayAnimMontage(Anim, AnimLength / Time);
 		}
+	}
+}
+
+void AWeapon::PlayWepAnim(UAnimMontage* Anim) const
+{
+	if (const auto AnimInstance = Mesh->GetAnimInstance())
+	{
+		AnimInstance->Montage_Play(Anim);
 	}
 }
 

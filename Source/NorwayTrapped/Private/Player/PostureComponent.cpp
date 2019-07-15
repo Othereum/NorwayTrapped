@@ -9,6 +9,7 @@
 #include "UnrealNetwork.h"
 #include "CharacterPosture.h"
 #include "FpsCharacter.h"
+#include "Gun.h"
 #include "WeaponComponent.h"
 
 void FStateInputData::Press(UPostureComponent* Comp)
@@ -104,6 +105,10 @@ void UPostureComponent::TrySetSprintingAndTransit(const bool b)
 		if (Crouch.bToggle) Crouch.bPressed = false;
 		if (Prone.bToggle) Prone.bPressed = false;
 		if (Walk.bToggle) Walk.bPressed = false;
+		if (const auto Gun = Cast<AGun>(Owner->GetWeapon()->GetActiveWeapon()))
+		{
+			Gun->CancelReload();
+		}
 	}
 	Transit();
 	if (!b || Posture == EPosture::Stand)
