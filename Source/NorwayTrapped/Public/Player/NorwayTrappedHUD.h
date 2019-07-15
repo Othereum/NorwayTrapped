@@ -1,8 +1,7 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
+// Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #pragma once 
 
-#include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "NorwayTrappedHUD.generated.h"
 
@@ -14,12 +13,10 @@ class ANorwayTrappedHUD : public AHUD
 public:
 	ANorwayTrappedHUD();
 
-	/** Primary draw call for the HUD */
-	virtual void DrawHUD() override;
+protected:
+	void DrawHUD() override;
 
 private:
-	/** Crosshair asset pointer */
 	class UTexture2D* CrosshairTex;
-
 };
 

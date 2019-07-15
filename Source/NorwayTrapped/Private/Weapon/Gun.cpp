@@ -42,6 +42,12 @@ void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 	DOREPLIFETIME(AGun, Clip);
 }
 
+void AGun::Holster(AWeapon* To)
+{
+	CancelReload();
+	Super::Holster(To);
+}
+
 bool AGun::CanFire() const
 {
 	switch (State)
@@ -71,6 +77,7 @@ void AGun::Fire()
 	PlayWepAnim(FireAnim);
 
 	Shoot();
+
 	if (Role != ROLE_SimulatedProxy)
 	{
 		--Clip;

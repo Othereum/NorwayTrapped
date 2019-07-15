@@ -35,6 +35,8 @@ protected:
 	void Tick(float DeltaSeconds) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void Holster(AWeapon* To) override;
+
 private:
 	void HandleFire(float DeltaSeconds);
 	void Fire();
