@@ -251,3 +251,8 @@ void AGun::Bolt() const
 {
 	PlayWepAnim(BoltAnim);
 }
+
+void AGun::EndReload() const
+{
+	Owner->StopAnimMontage(TacticalReloadAnim3P);
+}

@@ -26,8 +26,16 @@ void UFpsAnimInstance::NativeUpdateAnimation(float)
 		LeftHandIK.SetLocation(IKLocation);
 		LeftHandIK.SetRotation(IKRotation.Quaternion());
 
-		const auto State = Wep->GetState();
-		bDeployingOrHolstering = State == EWeaponState::Deploying || State == EWeaponState::Holstering;
+		switch (Wep->GetState())
+		{
+		case EWeaponState::Deploying:
+		case EWeaponState::Holstering:
+		case EWeaponState::Reloading:
+			bFABRIK = false;
+			break;
+		default:
+			bFABRIK = true;
+		}
 	}
 
 	Posture = Owner->GetPosture()->GetPostureEnum();

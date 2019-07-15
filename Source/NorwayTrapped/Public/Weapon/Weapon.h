@@ -58,7 +58,7 @@ public:
 protected:
 	virtual void Deploy();
 	virtual void Holster(AWeapon* To);
-	void PlayOwnerAnim(UAnimMontage* Anim, float Time) const;
+	void PlayOwnerAnim(UAnimMontage* Anim, float Time, bool bConsiderBlendOutTime = true) const;
 	void PlayWepAnim(UAnimMontage* Anim) const;
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly)

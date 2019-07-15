@@ -43,5 +43,5 @@ protected:
 	uint8 bSwitchingProne : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	uint8 bDeployingOrHolstering : 1;
+	uint8 bFABRIK : 1;
 };

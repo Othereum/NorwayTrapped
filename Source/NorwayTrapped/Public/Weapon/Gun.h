@@ -23,6 +23,7 @@ public:
 	void MagIn() const;
 	void MagOut() const;
 	void Bolt() const;
+	void EndReload() const;
 
 	uint8 GetClip() const { return Clip; }
 	bool CanFire() const;

@@ -107,11 +107,12 @@ void AWeapon::Holster(AWeapon* To)
 	}, HolsterTime, false);
 }
 
-void AWeapon::PlayOwnerAnim(UAnimMontage* Anim, const float Time) const
+void AWeapon::PlayOwnerAnim(UAnimMontage* Anim, const float Time, const bool bConsiderBlendOutTime) const
 {
 	if (Owner && Anim)
 	{
-		const auto AnimLength = Anim->SequenceLength - Anim->BlendOut.GetBlendTime();
+		auto AnimLength = Anim->SequenceLength * Anim->RateScale;
+		if (bConsiderBlendOutTime) AnimLength -= Anim->BlendOut.GetBlendTime();
 		if (AnimLength > 0.f)
 		{
 			Owner->PlayAnimMontage(Anim, AnimLength / Time);
