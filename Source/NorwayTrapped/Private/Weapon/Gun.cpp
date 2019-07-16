@@ -48,6 +48,12 @@ void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 	DOREPLIFETIME(AGun, Clip);
 }
 
+void AGun::Deploy()
+{
+	Super::Deploy();
+	OnDeploy();
+}
+
 void AGun::Holster(AWeapon* To)
 {
 	CancelReload();
