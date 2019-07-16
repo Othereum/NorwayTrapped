@@ -11,15 +11,19 @@
 //////////////////////////////////////////////////////////////////////////
 // AFpsCharacter
 
+const FName AFpsCharacter::CameraComponentName = "CameraComponent";
+const FName AFpsCharacter::PostureComponentName = "PostureComponent";
+const FName AFpsCharacter::WeaponComponentName = "WeaponComponent";
+
 AFpsCharacter::AFpsCharacter()
-	:Camera{ CreateDefaultSubobject<UCameraComponent>("Camera") },
-	Posture{ CreateDefaultSubobject<UPostureComponent>("Posture") },
-	Weapon{ CreateDefaultSubobject<UWeaponComponent>("Weapon") },
+	:CameraComponent{ CreateDefaultSubobject<UCameraComponent>(CameraComponentName) },
+	PostureComponent{ CreateDefaultSubobject<UPostureComponent>(PostureComponentName) },
+	WeaponComponent{ CreateDefaultSubobject<UWeaponComponent>(WeaponComponentName) },
 	bAlive{ true }
 {
 	GetMesh()->bReturnMaterialOnMove = true;
-	Camera->SetupAttachment(GetMesh(), "Eye");
-	Weapon->SetupAttachment(GetMesh(), "RightHand");
+	CameraComponent->SetupAttachment(GetMesh(), "Eye");
+	WeaponComponent->SetupAttachment(GetMesh(), "RightHand");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,8 +39,8 @@ void AFpsCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 	Input->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	Input->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
-	Posture->SetupPlayerInputComponent(Input);
-	Weapon->SetupPlayerInputComponent(Input);
+	PostureComponent->SetupPlayerInputComponent(Input);
+	WeaponComponent->SetupPlayerInputComponent(Input);
 }
 
 void AFpsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

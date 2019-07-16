@@ -10,7 +10,7 @@ AGun* UAnimNotify_GunReload::GetGun(USkeletalMeshComponent* MeshComp) const
 {
 	if (const auto Owner = Cast<AFpsCharacter>(MeshComp->GetOwner()))
 	{
-		return Cast<AGun>(Owner->GetWeapon()->GetActiveWeapon());
+		return Cast<AGun>(Owner->GetWeaponComponent()->GetActiveWeapon());
 	}
 	return nullptr;
 }

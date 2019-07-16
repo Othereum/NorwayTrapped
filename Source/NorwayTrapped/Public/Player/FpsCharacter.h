@@ -11,20 +11,20 @@ class AFpsCharacter : public ACharacter
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	class UCameraComponent* Camera;
+	class UCameraComponent* CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	class UPostureComponent* Posture;
+	class UPostureComponent* PostureComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	class UWeaponComponent* Weapon;
+	class UWeaponComponent* WeaponComponent;
 
 public:
 	AFpsCharacter();
 
-	UCameraComponent* GetCamera() const { return Camera; }
-	UPostureComponent* GetPosture() const { return Posture; }
-	UWeaponComponent* GetWeapon() const { return Weapon; }
+	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
+	UPostureComponent* GetPostureComponent() const { return PostureComponent; }
+	UWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 	float GetHp() const { return Hp; }
 	bool IsAlive() const { return bAlive; }
 
@@ -37,6 +37,10 @@ public:
 	void OnKill();
 
 protected:
+	static const FName CameraComponentName;
+	static const FName PostureComponentName;
+	static const FName WeaponComponentName;
+
 	void SetupPlayerInputComponent(class UInputComponent* Input) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;

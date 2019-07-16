@@ -9,20 +9,14 @@
 class AWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UWeaponComponent final : public USceneComponent
+class UWeaponComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
 public:
 	UWeaponComponent();
 
-private:
-	void InitializeComponent() override;
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
-
-public:
-	void SetupPlayerInputComponent(class UInputComponent* Input);
+	virtual void SetupPlayerInputComponent(class UInputComponent* Input);
 
 	/*
 	 * [Server] Gives a weapon. Replaces if already in the same slot.
@@ -30,7 +24,7 @@ public:
 	 * @return: The weapon given
 	 */
 	UFUNCTION(BlueprintCallable)
-	AWeapon* Give(TSubclassOf<AWeapon> WeaponClass);
+	virtual AWeapon* Give(TSubclassOf<AWeapon> WeaponClass);
 
 	/*
 	 * [Shared] Returns active weapon.
@@ -39,16 +33,25 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AWeapon* GetActiveWeapon() const { return Active < Weapons.Num() ? Weapons[Active] : nullptr; }
 
-	void SelectWeapon(uint8 Slot);
+	virtual void SelectWeapon(uint8 Slot);
+	virtual void FireR();
 
 	class AFpsCharacter* const Owner = nullptr;
 
-	void FireR();
-private:
-	void AimP(); void AimR();
-	void FireP();
-	void Reload();
+protected:
+	void InitializeComponent() override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
+	virtual void AimP();
+	virtual void AimR();
+	virtual void FireP();
+	virtual void Reload();
+
+	UFUNCTION()
+	virtual void OnRep_Weapons();
+
+private:
 	UFUNCTION(Server, Reliable, WithValidation) void ServerFireP();
 	UFUNCTION(Server, Reliable, WithValidation) void ServerFireR();
 	UFUNCTION(Server, Reliable, WithValidation) void ServerAimP();
@@ -62,9 +65,6 @@ private:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetActiveWeapon(uint8 Slot);
-
-	UFUNCTION()
-	void OnRep_Weapons();
 
 	UPROPERTY(VisibleInstanceOnly, ReplicatedUsing=OnRep_Weapons, Transient)
 	TArray<AWeapon*> Weapons;

@@ -104,7 +104,7 @@ void AGun::FireP()
 	const auto Character = GetCharacter();
 	if (Character && Character->IsLocallyControlled())
 	{
-		Character->GetPosture()->Sprint.bPressed = false;
+		Character->GetPostureComponent()->Sprint.bPressed = false;
 	}
 	bWantsToFire = true;
 	if (CanFire())
@@ -204,7 +204,7 @@ void AGun::Shoot()
 	const auto Character = GetCharacter();
 	if (!Character) return;
 
-	const auto CameraLocation = Character->GetCamera()->GetComponentLocation();
+	const auto CameraLocation = Character->GetCameraComponent()->GetComponentLocation();
 	const auto CameraEnd = CameraLocation + Character->GetBaseAimRotation().Vector() * MaxRange;
 
 	FCollisionQueryParams QueryParams;

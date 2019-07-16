@@ -24,7 +24,7 @@ void FStateInputData::Release(UPostureComponent* Comp)
 
 void FSprintData::Press(UPostureComponent* Comp)
 {
-	Comp->Owner->GetWeapon()->FireR();
+	Comp->Owner->GetWeaponComponent()->FireR();
 	Super::Press(Comp);
 }
 
@@ -105,7 +105,7 @@ void UPostureComponent::TrySetSprintingAndTransit(const bool b)
 		if (Crouch.bToggle) Crouch.bPressed = false;
 		if (Prone.bToggle) Prone.bPressed = false;
 		if (Walk.bToggle) Walk.bPressed = false;
-		if (const auto Gun = Cast<AGun>(Owner->GetWeapon()->GetActiveWeapon()))
+		if (const auto Gun = Cast<AGun>(Owner->GetWeaponComponent()->GetActiveWeapon()))
 		{
 			Gun->CancelReload();
 		}

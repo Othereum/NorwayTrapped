@@ -27,7 +27,7 @@ void AWeapon::BeginPlay()
 	if (!HasAuthority() && State == EWeaponState::NeverDeployed)
 	{
 		const auto Character = GetCharacter();
-		if (Character && Character->GetWeapon()->GetActiveWeapon() == this)
+		if (Character && Character->GetWeaponComponent()->GetActiveWeapon() == this)
 		{
 			Deploy();
 		}
@@ -114,7 +114,7 @@ void AWeapon::Holster(AWeapon* To)
 		{
 			State = EWeaponState::Unequipped;
 			if (const auto Character = GetCharacter())
-				Character->GetWeapon()->SelectWeapon(ToSlot);
+				Character->GetWeaponComponent()->SelectWeapon(ToSlot);
 		}
 	}, HolsterTime, false);
 }

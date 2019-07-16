@@ -16,7 +16,7 @@ void UFpsAnimInstance::NativeUpdateAnimation(float)
 	Direction = CalculateDirection(Velocity, Rotation);
 	Aim = (Owner->GetBaseAimRotation() - Rotation).GetNormalized();
 
-	if (const auto Wep = Owner->GetWeapon()->GetActiveWeapon())
+	if (const auto Wep = Owner->GetWeaponComponent()->GetActiveWeapon())
 	{
 		const auto LeftHand = Wep->GetMesh()->GetSocketTransform(WeaponLeftHandIKSocketName);
 		FVector IKLocation;
@@ -38,7 +38,7 @@ void UFpsAnimInstance::NativeUpdateAnimation(float)
 		}
 	}
 
-	Posture = Owner->GetPosture()->GetPostureEnum();
-	bSprinting = Owner->GetPosture()->IsSprinting();
-	bSwitchingProne = Owner->GetPosture()->Prone.bSwitching;
+	Posture = Owner->GetPostureComponent()->GetPostureEnum();
+	bSprinting = Owner->GetPostureComponent()->IsSprinting();
+	bSwitchingProne = Owner->GetPostureComponent()->Prone.bSwitching;
 }
