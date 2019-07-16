@@ -24,18 +24,24 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const_cast<AFpsCharacter*&>(Owner) = CastChecked<AFpsCharacter>(GetOwner());
-
-	if (!HasAuthority() && State == EWeaponState::NeverDeployed && Owner->GetWeapon()->GetActiveWeapon() == this)
+	if (!HasAuthority() && State == EWeaponState::NeverDeployed)
 	{
-		Deploy();
+		const auto Character = GetCharacter();
+		if (Character && Character->GetWeapon()->GetActiveWeapon() == this)
+		{
+			Deploy();
+		}
 	}
 }
 
 void AWeapon::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	Role = Owner->Role;
+
+	if (const auto Character = GetCharacter())
+	{
+		Role = Character->Role;
+	}
 }
 
 void AWeapon::PostInitializeComponents()
@@ -71,6 +77,11 @@ void AWeapon::SetVisibility(const bool bNewVisibility) const
 	Mesh->SetVisibility(bNewVisibility);
 }
 
+AFpsCharacter* AWeapon::GetCharacter() const
+{
+	return Cast<AFpsCharacter>(GetOwner());
+}
+
 void AWeapon::Deploy()
 {
 	PlayOwnerAnim(DeployAnim, DeployTime);
@@ -102,20 +113,22 @@ void AWeapon::Holster(AWeapon* To)
 		if (HasAuthority())
 		{
 			State = EWeaponState::Unequipped;
-			Owner->GetWeapon()->SelectWeapon(ToSlot);
+			if (const auto Character = GetCharacter())
+				Character->GetWeapon()->SelectWeapon(ToSlot);
 		}
 	}, HolsterTime, false);
 }
 
 void AWeapon::PlayOwnerAnim(UAnimMontage* Anim, const float Time, const bool bConsiderBlendOutTime) const
 {
-	if (Owner && Anim)
+	const auto Character = GetCharacter();
+	if (Character && Anim)
 	{
 		auto AnimLength = Anim->SequenceLength * Anim->RateScale;
 		if (bConsiderBlendOutTime) AnimLength -= Anim->BlendOut.GetBlendTime();
 		if (AnimLength > 0.f)
 		{
-			Owner->PlayAnimMontage(Anim, AnimLength / Time);
+			Character->PlayAnimMontage(Anim, AnimLength / Time);
 		}
 	}
 }

@@ -33,9 +33,15 @@ public:
 protected:
 	void BeginPlay() override;
 	void Tick(float DeltaSeconds) override;
+	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void Holster(AWeapon* To) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AimP() override;
+	UFUNCTION(BlueprintImplementableEvent)
+	void AimR() override;
 
 private:
 	void HandleFire(float DeltaSeconds);

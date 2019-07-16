@@ -35,6 +35,12 @@ void AGun::Tick(const float DeltaSeconds)
 	}
 }
 
+void AGun::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (MagazineRef) MagazineRef->Destroy();
+}
+
 void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -73,7 +79,8 @@ void AGun::HandleFire(const float DeltaSeconds)
 void AGun::Fire()
 {
 	CancelReload();
-	Owner->PlayAnimMontage(FireAnim3P);
+	if (const auto Character = GetCharacter())
+		Character->PlayAnimMontage(FireAnim3P);
 	PlayWepAnim(FireAnim);
 
 	Shoot();
@@ -88,9 +95,10 @@ void AGun::Fire()
 
 void AGun::FireP()
 {
-	if (Owner->IsLocallyControlled())
+	const auto Character = GetCharacter();
+	if (Character && Character->IsLocallyControlled())
 	{
-		Owner->GetPosture()->Sprint.bPressed = false;
+		Character->GetPosture()->Sprint.bPressed = false;
 	}
 	bWantsToFire = true;
 	if (CanFire())
@@ -174,8 +182,11 @@ bool AGun::CanReload() const
 
 void AGun::CancelReload()
 {
-	Owner->StopAnimMontage(TacticalReloadAnim3P);
-	Owner->StopAnimMontage(FullReloadAnim3P);
+	if (const auto Character = GetCharacter())
+	{
+		Character->StopAnimMontage(TacticalReloadAnim3P);
+		Character->StopAnimMontage(FullReloadAnim3P);
+	}
 	StopWepAnim(0.f, MagOutAnim);
 	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
 	if (MagazineRef) MagazineRef->Destroy();
@@ -184,12 +195,15 @@ void AGun::CancelReload()
 
 void AGun::Shoot()
 {
-	const auto CameraLocation = Owner->GetCamera()->GetComponentLocation();
-	const auto CameraEnd = CameraLocation + Owner->GetBaseAimRotation().Vector() * MaxRange;
+	const auto Character = GetCharacter();
+	if (!Character) return;
+
+	const auto CameraLocation = Character->GetCamera()->GetComponentLocation();
+	const auto CameraEnd = CameraLocation + Character->GetBaseAimRotation().Vector() * MaxRange;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredActor(Owner);
+	QueryParams.AddIgnoredActor(Character);
 
 	FHitResult CameraHit;
 	if (GetWorld()->LineTraceSingleByProfile(CameraHit, CameraLocation, CameraEnd, BulletCollisionProfile.Name, QueryParams))
@@ -208,7 +222,7 @@ void AGun::Shoot()
 			{
 				HitActor->TakeDamage(Damage, FPointDamageEvent{
 					Damage, BulletHit, ShotDir, DamageType
-				}, Owner->Controller, this);
+				}, Character->Controller, this);
 			}
 
 			const auto PhysMat = BulletHit.PhysMaterial.Get();
@@ -229,16 +243,20 @@ void AGun::DropMag() const
 	if (const auto DroppedMag = GetWorld()->SpawnActor<AStaticMeshActor>(EmptyMagazineClass, GetMesh()->GetSocketTransform(MagazineSocketName)))
 	{
 		DroppedMag->GetStaticMeshComponent()->SetStaticMesh(EmptyMagazineMesh);
-		DroppedMag->GetStaticMeshComponent()->AddImpulse(Owner->GetVelocity() * .5f);
+		if (const auto Character = GetCharacter())
+			DroppedMag->GetStaticMeshComponent()->AddImpulse(Character->GetVelocity() * .5f);
 	}
 }
 
 void AGun::GrabMag() const
 {
+	const auto Character = GetCharacter();
+	if (!Character) return;
+
 	MagazineRef = GetWorld()->SpawnActor<AStaticMeshActor>(MagazineClass);
 	if (MagazineRef)
 	{
-		MagazineRef->AttachToComponent(Owner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, MagazineSocketName);
+		MagazineRef->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, MagazineSocketName);
 		MagazineRef->GetStaticMeshComponent()->SetStaticMesh(MagazineMesh);
 	}
 }
@@ -264,5 +282,6 @@ void AGun::Bolt() const
 
 void AGun::EndReload() const
 {
-	Owner->StopAnimMontage(TacticalReloadAnim3P);
+	if (const auto Character = GetCharacter())
+		Character->StopAnimMontage(TacticalReloadAnim3P);
 }

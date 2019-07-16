@@ -52,8 +52,7 @@ public:
 	USkeletalMeshComponent* GetMesh() const { return Mesh; }
 	bool IsVisible() const;
 	void SetVisibility(bool bNewVisibility) const;
-
-	class AFpsCharacter* const Owner = nullptr;
+	class AFpsCharacter* GetCharacter() const;
 
 protected:
 	virtual void Deploy();

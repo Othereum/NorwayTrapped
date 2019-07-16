@@ -19,6 +19,7 @@ public:
 private:
 	void InitializeComponent() override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	void SetupPlayerInputComponent(class UInputComponent* Input);

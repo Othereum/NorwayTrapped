@@ -31,6 +31,16 @@ void UWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UWeaponComponent, Active);
 }
 
+void UWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	for (auto Wep : Weapons)
+	{
+		if (Wep) Wep->Destroy();
+	}
+}
+
 void UWeaponComponent::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Input->BindAction("Fire", IE_Pressed, this, &UWeaponComponent::FireP);
