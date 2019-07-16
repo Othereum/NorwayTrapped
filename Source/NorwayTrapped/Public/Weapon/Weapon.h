@@ -65,6 +65,8 @@ protected:
 	EWeaponState State;
 
 private:
+	void Init();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	FText Name;
 
@@ -87,4 +89,6 @@ private:
 	UAnimMontage* HolsterAnim;
 
 	FTimerHandle StateSetTimer;
+
+	AFpsCharacter* Owner;
 };

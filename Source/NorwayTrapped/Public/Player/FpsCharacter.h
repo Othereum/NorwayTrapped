@@ -19,15 +19,18 @@ class AFpsCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	class UWeaponComponent* WeaponComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UCameraComponent* AimCamera;
+
 public:
 	AFpsCharacter();
 
 	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 	UPostureComponent* GetPostureComponent() const { return PostureComponent; }
 	UWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
+
 	float GetHp() const { return Hp; }
 	bool IsAlive() const { return bAlive; }
-
 	virtual void Kill();
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -36,11 +39,16 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnKill();
 
+	void Aim();
+	void UnAim();
+
 protected:
 	static const FName CameraComponentName;
 	static const FName PostureComponentName;
 	static const FName WeaponComponentName;
+	static const FName AimCameraName;
 
+	void Tick(float DeltaSeconds) override;
 	void SetupPlayerInputComponent(class UInputComponent* Input) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
@@ -58,4 +66,8 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	uint8 bAlive : 1;
+
+	uint8 bBlendingAimCam : 1;
+	uint8 bBlendingAimCamForward : 1;
+	float AimCamBlendAlpha;
 };

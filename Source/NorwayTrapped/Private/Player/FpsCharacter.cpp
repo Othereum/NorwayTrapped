@@ -5,6 +5,7 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "UnrealNetwork.h"
+#include "Gun.h"
 #include "PostureComponent.h"
 #include "WeaponComponent.h"
 
@@ -14,20 +15,49 @@
 const FName AFpsCharacter::CameraComponentName = "CameraComponent";
 const FName AFpsCharacter::PostureComponentName = "PostureComponent";
 const FName AFpsCharacter::WeaponComponentName = "WeaponComponent";
+const FName AFpsCharacter::AimCameraName = "AimCamera";
 
 AFpsCharacter::AFpsCharacter()
 	:CameraComponent{ CreateDefaultSubobject<UCameraComponent>(CameraComponentName) },
 	PostureComponent{ CreateDefaultSubobject<UPostureComponent>(PostureComponentName) },
 	WeaponComponent{ CreateDefaultSubobject<UWeaponComponent>(WeaponComponentName) },
+	AimCamera{ CreateDefaultSubobject<UCameraComponent>(AimCameraName) },
 	bAlive{ true }
 {
 	GetMesh()->bReturnMaterialOnMove = true;
 	CameraComponent->SetupAttachment(GetMesh(), "Eye");
 	WeaponComponent->SetupAttachment(GetMesh(), "RightHand");
+	AimCamera->SetupAttachment(WeaponComponent);
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
+
+void AFpsCharacter::Tick(const float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (bBlendingAimCam)
+	{
+		if (const auto Gun = Cast<AGun>(WeaponComponent->GetActiveWeapon()))
+		{
+			AimCamBlendAlpha = FMath::Clamp(AimCamBlendAlpha + DeltaSeconds / Gun->GetAimTime()
+				* (bBlendingAimCamForward ? 1.f : -1.f), 0.f, 1.f);
+			AimCamera->SetWorldLocation(FMath::CubicInterp(CameraComponent->GetComponentLocation(), FVector::ZeroVector, Gun->GetAimLocation(), FVector::ZeroVector, AimCamBlendAlpha));
+			AimCamera->SetFieldOfView(CameraComponent->FieldOfView * FMath::CubicInterp(1.f, 0.f, Gun->GetAimFovRatio(), 0.f, AimCamBlendAlpha));
+			
+			if (AimCamBlendAlpha == 0.f || AimCamBlendAlpha == 1.f)
+			{
+				if (!bBlendingAimCamForward)
+				{
+					AimCamera->Deactivate();
+					CameraComponent->Activate();
+				}
+				bBlendingAimCam = false;
+			}
+		}
+	}
+}
 
 void AFpsCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
@@ -74,6 +104,21 @@ void AFpsCharacter::Kill()
 	Hp = 0.f;
 	bAlive = false;
 	OnKill();
+}
+
+void AFpsCharacter::Aim()
+{
+	bBlendingAimCam = true;
+	bBlendingAimCamForward = true;
+
+	CameraComponent->Deactivate();
+	AimCamera->Activate();
+}
+
+void AFpsCharacter::UnAim()
+{
+	bBlendingAimCam = true;
+	bBlendingAimCamForward = false;
 }
 
 void AFpsCharacter::MulticastKill_Implementation()

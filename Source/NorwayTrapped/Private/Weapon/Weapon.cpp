@@ -23,14 +23,23 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+	Init();
+}
 
-	if (!HasAuthority() && State == EWeaponState::NeverDeployed)
+void AWeapon::Init()
+{
+	if (const auto Character = Cast<AFpsCharacter>(GetOwner()))
 	{
-		const auto Character = GetCharacter();
-		if (Character && Character->GetWeaponComponent()->GetActiveWeapon() == this)
+		Owner = Character;
+		Role = Owner->Role;
+		if (State == EWeaponState::NeverDeployed && Owner->GetWeaponComponent()->GetActiveWeapon() == this)
 		{
 			Deploy();
 		}
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimerForNextTick(this, &AWeapon::Init);
 	}
 }
 
@@ -79,7 +88,7 @@ void AWeapon::SetVisibility(const bool bNewVisibility) const
 
 AFpsCharacter* AWeapon::GetCharacter() const
 {
-	return Cast<AFpsCharacter>(GetOwner());
+	return Owner;
 }
 
 void AWeapon::Deploy()

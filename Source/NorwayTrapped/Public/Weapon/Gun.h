@@ -30,6 +30,14 @@ public:
 	bool CanReload() const;
 	void CancelReload();
 
+	bool IsAiming() const { return bAiming; }
+	void SetAiming(bool bNewAiming);
+
+	// Returns the world location of the camera when aiming.
+	virtual FVector GetAimLocation() const;
+	virtual float GetAimTime() const;
+	virtual float GetAimFovRatio() const;
+
 protected:
 	void BeginPlay() override;
 	void Tick(float DeltaSeconds) override;
@@ -38,11 +46,9 @@ protected:
 
 	void Deploy() override;
 	void Holster(AWeapon* To) override;
-
-	UFUNCTION(BlueprintImplementableEvent)
 	void AimP() override;
-	UFUNCTION(BlueprintImplementableEvent)
 	void AimR() override;
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeploy();
 
@@ -53,9 +59,7 @@ private:
 	void FireR() override;
 	void StartFire();
 	void StopFire();
-
 	void Reload() override;
-
 	void Shoot();
 
 	UPROPERTY(EditAnywhere)
@@ -72,6 +76,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0.1, UIMin=1))
 	float FullReloadTime = 1;
+
+	UPROPERTY(EditAnywhere)
+	float AimTime = .4f;
+
+	UPROPERTY(EditAnywhere)
+	float IronsightFovRatio = .9f;
+
+	UPROPERTY(EditAnywhere)
+	FVector AimOffset;
 
 	UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0, UIMin=0))
 	float MaxRange = 50000;
@@ -136,6 +149,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	uint8 bChamber : 1;
+
+	UPROPERTY(EditAnywhere)
+	uint8 bToggleToAim : 1;
+
+	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	uint8 bAiming : 1;
 
 public:
 	uint8 bWantsToFire : 1;

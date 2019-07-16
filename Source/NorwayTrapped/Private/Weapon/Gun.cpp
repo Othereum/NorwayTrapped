@@ -243,6 +243,47 @@ void AGun::Shoot()
 	}
 }
 
+void AGun::AimP()
+{
+	SetAiming(bToggleToAim ? !bAiming : true);
+}
+
+void AGun::AimR()
+{
+	if (!bToggleToAim)
+	{
+		SetAiming(false);
+	}
+}
+
+void AGun::SetAiming(const bool bNewAiming)
+{
+	if (bNewAiming)
+	{
+		GetCharacter()->Aim();
+	}
+	else
+	{
+		GetCharacter()->UnAim();
+	}
+	bAiming = bNewAiming;
+}
+
+FVector AGun::GetAimLocation() const
+{
+	return GetMesh()->GetSocketLocation("Aim");
+}
+
+float AGun::GetAimTime() const
+{
+	return AimTime;
+}
+
+float AGun::GetAimFovRatio() const
+{
+	return IronsightFovRatio;
+}
+
 void AGun::DropMag() const
 {
 	if (!EmptyMagazineClass) return;
