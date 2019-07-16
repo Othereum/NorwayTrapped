@@ -38,7 +38,7 @@ void AGun::Tick(const float DeltaSeconds)
 void AGun::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	if (MagazineRef) MagazineRef->Destroy();
+	if (NewMagazineRef) NewMagazineRef->Destroy();
 }
 
 void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -86,7 +86,7 @@ void AGun::Fire()
 {
 	CancelReload();
 	if (const auto Character = GetCharacter())
-		Character->PlayAnimMontage(FireAnim3P);
+		Character->PlayAnimMontage(CharacterFireAnim);
 	PlayWepAnim(FireAnim);
 
 	Shoot();
@@ -154,12 +154,12 @@ void AGun::Reload()
 	const auto bTactical = Clip && bChamber;
 	if (bTactical)
 	{
-		Anim = TacticalReloadAnim3P;
+		Anim = CharacterTacticalReloadAnim;
 		Time = TacticalReloadTime;
 	}
 	else
 	{
-		Anim = FullReloadAnim3P;
+		Anim = CharacterFullReloadAnim;
 		Time = FullReloadTime;
 	}
 
@@ -190,12 +190,12 @@ void AGun::CancelReload()
 {
 	if (const auto Character = GetCharacter())
 	{
-		Character->StopAnimMontage(TacticalReloadAnim3P);
-		Character->StopAnimMontage(FullReloadAnim3P);
+		Character->StopAnimMontage(CharacterTacticalReloadAnim);
+		Character->StopAnimMontage(CharacterFullReloadAnim);
 	}
 	StopWepAnim(0.f, MagOutAnim);
 	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
-	if (MagazineRef) MagazineRef->Destroy();
+	if (NewMagazineRef) NewMagazineRef->Destroy();
 	State = EWeaponState::Idle;
 }
 
@@ -259,20 +259,20 @@ void AGun::GrabMag() const
 	const auto Character = GetCharacter();
 	if (!Character) return;
 
-	MagazineRef = GetWorld()->SpawnActor<AStaticMeshActor>(MagazineClass);
-	if (MagazineRef)
+	NewMagazineRef = GetWorld()->SpawnActor<AStaticMeshActor>(NewMagazineClass);
+	if (NewMagazineRef)
 	{
-		MagazineRef->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, MagazineSocketName);
-		MagazineRef->GetStaticMeshComponent()->SetStaticMesh(MagazineMesh);
+		NewMagazineRef->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, MagazineSocketName);
+		NewMagazineRef->GetStaticMeshComponent()->SetStaticMesh(NewMagazineMesh);
 	}
 }
 
 void AGun::MagIn() const
 {
 	PlayWepAnim(MagInAnim);
-	if (MagazineRef)
+	if (NewMagazineRef)
 	{
-		MagazineRef->Destroy();
+		NewMagazineRef->Destroy();
 	}
 }
 
@@ -289,5 +289,5 @@ void AGun::Bolt() const
 void AGun::EndReload() const
 {
 	if (const auto Character = GetCharacter())
-		Character->StopAnimMontage(TacticalReloadAnim3P);
+		Character->StopAnimMontage(CharacterTacticalReloadAnim);
 }

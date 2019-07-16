@@ -73,7 +73,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0.1, UIMin=1))
 	float FullReloadTime = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0, UIMin=0))
+	UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0, UIMin=0))
 	float MaxRange = 50000;
 
 	UPROPERTY(EditAnywhere)
@@ -88,44 +88,44 @@ private:
 	UPROPERTY(EditAnywhere)
 	TMap<TEnumAsByte<EPhysicalSurface>, UParticleSystem*> Impact;
 
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* FireAnim3P;
+	UPROPERTY(EditAnywhere, Category=Animation)
+	UAnimMontage* CharacterFireAnim;
 	
-	UPROPERTY(EditAnywhere, meta=(EditCondition=bChamber))
-	UAnimMontage* TacticalReloadAnim3P;
+	UPROPERTY(EditAnywhere, Category=Animation, meta=(EditCondition=bChamber))
+	UAnimMontage* CharacterTacticalReloadAnim;
 
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* FullReloadAnim3P;
+	UPROPERTY(EditAnywhere, Category=Animation)
+	UAnimMontage* CharacterFullReloadAnim;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* FireAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* MagOutAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* MagInAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* BoltAnim;
 
 	UPROPERTY(EditAnywhere)
 	FName MagazineSocketName = "Magazine";
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AStaticMeshActor> MagazineClass;
+	TSubclassOf<AStaticMeshActor> NewMagazineClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AStaticMeshActor> EmptyMagazineClass;
 
 	UPROPERTY(EditAnywhere)
-	UStaticMesh* MagazineMesh;
+	UStaticMesh* NewMagazineMesh;
 
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* EmptyMagazineMesh;
 
 	UPROPERTY(Transient)
-	mutable AStaticMeshActor* MagazineRef;
+	mutable AStaticMeshActor* NewMagazineRef;
 
 	float FireLag;
 	float LastFire;
