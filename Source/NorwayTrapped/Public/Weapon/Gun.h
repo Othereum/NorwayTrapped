@@ -66,6 +66,9 @@ private:
 	void Shoot();
 	void HitBullet(const FHitResult& Hit, const FVector& ShotDirection);
 
+	UFUNCTION()
+	void OnRep_HipfireRandSeed();
+
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
@@ -168,6 +171,10 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Transient, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	uint8 bAiming : 1;
+
+	UPROPERTY(ReplicatedUsing=OnRep_HipfireRandSeed, Transient)
+	int32 HipfireRandSeed;
+	FRandomStream HipfireSpreadRand;
 
 public:
 	uint8 bWantsToFire : 1;

@@ -16,7 +16,11 @@ void AGun::BeginPlay()
 {
 	Super::BeginPlay();
 	const_cast<const AGun*&>(CDO) = GetDefault<AGun>(GetClass());
-	if (HasAuthority()) Clip += bChamber;
+	if (HasAuthority())
+	{
+		Clip += bChamber;
+		HipfireSpreadRand = FMath::Rand();
+	}
 }
 
 void AGun::Tick(const float DeltaSeconds)
@@ -228,7 +232,7 @@ void AGun::Shoot()
 			Start = GetMesh()->GetSocketLocation(MuzzleSocketName);
 			ShotDir = CameraHit.Location - Start;
 			ShotDir.Normalize();
-			End = MaxRange * FMath::VRandCone(ShotDir, HipfireSpread);
+			End = MaxRange * HipfireSpreadRand.VRandCone(ShotDir, HipfireSpread);
 
 			QueryParams.bReturnPhysicalMaterial = true;
 		}
@@ -354,4 +358,9 @@ void AGun::EndReload() const
 {
 	if (const auto Character = GetCharacter())
 		Character->StopAnimMontage(CharacterTacticalReloadAnim);
+}
+
+void AGun::OnRep_HipfireRandSeed()
+{
+	HipfireSpreadRand.Initialize(HipfireRandSeed);
 }
