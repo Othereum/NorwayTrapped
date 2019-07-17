@@ -34,7 +34,7 @@ AFpsCharacter::AFpsCharacter()
 	CameraComponent->SetupAttachment(GetMesh(), "Eye");
 	CameraComponent->bUsePawnControlRotation = true;
 
-	WeaponComponent->SetupAttachment(GetMesh(), "RightHand");
+	WeaponComponent->SetupAttachment(GetMesh(), "Weapon");
 
 	AimCamera->SetupAttachment(WeaponComponent);
 	AimCamera->bUsePawnControlRotation = true;

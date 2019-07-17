@@ -6,6 +6,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TimerManager.h"
 #include "UnrealNetwork.h"
@@ -49,12 +50,6 @@ void AGun::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AGun, Clip);
-}
-
-void AGun::Deploy()
-{
-	Super::Deploy();
-	OnDeploy();
 }
 
 void AGun::Holster(AWeapon* To)
@@ -240,10 +235,17 @@ void AGun::Shoot()
 
 	QueryParams.bReturnPhysicalMaterial = true;
 
+	const auto TrailPSC = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Trail, GetMesh()->GetSocketTransform(MuzzleSocketName), true, EPSCPoolMethod::AutoRelease);
+
 	FHitResult BulletHit;
 	if (GetWorld()->LineTraceSingleByProfile(BulletHit, Start, End, BulletCollisionProfile.Name, QueryParams))
 	{
 		HitBullet(BulletHit, ShotDir);
+		TrailPSC->SetVectorParameter("ShockBeamEnd", BulletHit.Location);
+	}
+	else
+	{
+		TrailPSC->SetVectorParameter("ShockBeamEnd", End);
 	}
 }
 

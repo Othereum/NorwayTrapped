@@ -44,16 +44,9 @@ protected:
 	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void Deploy() override;
 	void Holster(AWeapon* To) override;
 	void AimP() override;
 	void AimR() override;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnDeploy();
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnShoot(FVector Start, FVector End);
 
 private:
 	void HandleFire(float DeltaSeconds);
@@ -116,6 +109,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TMap<TEnumAsByte<EPhysicalSurface>, UParticleSystem*> Impact;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* Trail;
 
 	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* CharacterFireAnim;
