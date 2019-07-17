@@ -37,6 +37,7 @@ public:
 	virtual FVector GetAimLocation() const;
 	virtual float GetAimTime() const;
 	virtual float GetAimFovRatio() const;
+	virtual float GetHipfireSpread() const;
 
 protected:
 	void BeginPlay() override;

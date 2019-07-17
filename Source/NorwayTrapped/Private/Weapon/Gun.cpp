@@ -215,9 +215,7 @@ void AGun::Shoot()
 
 	if (bAiming)
 	{
-		End = Start + (GetMesh()->GetSocketLocation(AimEndSocket) - Start).GetSafeNormal() * MaxRange;
-		ShotDir = End - Start;
-		ShotDir.Normalize();
+		ShotDir = GetMesh()->GetSocketLocation(AimEndSocket) - Start;
 	}
 	else
 	{
@@ -226,27 +224,30 @@ void AGun::Shoot()
 		{
 			Start = GetMesh()->GetSocketLocation(MuzzleSocketName);
 			ShotDir = CameraHit.Location - Start;
-			ShotDir.Normalize();
-			End = MaxRange * HipfireSpreadRand.VRandCone(ShotDir, HipfireSpread);
-
-			QueryParams.bReturnPhysicalMaterial = true;
 		}
 	}
 
+	ShotDir.Normalize();
+	End = MaxRange * HipfireSpreadRand.VRandCone(ShotDir, GetHipfireSpread());
+
 	QueryParams.bReturnPhysicalMaterial = true;
 
-	const auto TrailPSC = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Trail, GetMesh()->GetSocketTransform(MuzzleSocketName), true, EPSCPoolMethod::AutoRelease);
-
+	auto TrailTarget = &End;
 	FHitResult BulletHit;
-	if (GetWorld()->LineTraceSingleByProfile(BulletHit, Start, End, BulletCollisionProfile.Name, QueryParams))
+	const auto bHit = GetWorld()->LineTraceSingleByProfile(BulletHit, Start, End, BulletCollisionProfile.Name, QueryParams);
+	if (bHit)
 	{
 		HitBullet(BulletHit, ShotDir);
-		TrailPSC->SetVectorParameter("ShockBeamEnd", BulletHit.Location);
+		TrailTarget = &BulletHit.Location;
 	}
-	else
-	{
-		TrailPSC->SetVectorParameter("ShockBeamEnd", End);
-	}
+
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),
+		Trail,
+		GetMesh()->GetSocketTransform(MuzzleSocketName),
+		true,
+		EPSCPoolMethod::AutoRelease
+	)->SetVectorParameter("ShockBeamEnd", *TrailTarget);
 }
 
 void AGun::HitBullet(const FHitResult& Hit, const FVector& ShotDirection)
@@ -312,6 +313,11 @@ float AGun::GetAimTime() const
 float AGun::GetAimFovRatio() const
 {
 	return IronsightFovRatio;
+}
+
+float AGun::GetHipfireSpread() const
+{
+	return FMath::CubicInterp(HipfireSpread, 0.f, 0.f, 0.f, GetCharacter()->GetAimBlendAlpha());
 }
 
 void AGun::DropMag() const

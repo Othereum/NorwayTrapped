@@ -43,6 +43,7 @@ public:
 
 	void Aim();
 	void UnAim();
+	float GetAimBlendAlpha() const { return AimCamBlendAlpha; }
 
 protected:
 	static const FName CameraComponentName;
