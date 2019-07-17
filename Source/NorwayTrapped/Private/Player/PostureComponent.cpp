@@ -108,6 +108,7 @@ void UPostureComponent::TrySetSprintingAndTransit(const bool b)
 		if (const auto Gun = Cast<AGun>(Owner->GetWeaponComponent()->GetActiveWeapon()))
 		{
 			Gun->CancelReload();
+			Gun->SetAiming(false);
 		}
 	}
 	Transit();

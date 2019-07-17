@@ -111,6 +111,7 @@ void AFpsCharacter::Aim()
 	bBlendingAimCam = true;
 	bBlendingAimCamForward = true;
 
+	PostureComponent->Sprint.bPressed = false;
 	CameraComponent->Deactivate();
 	AimCamera->Activate();
 }

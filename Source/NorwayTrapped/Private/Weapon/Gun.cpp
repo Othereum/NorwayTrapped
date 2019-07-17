@@ -57,6 +57,7 @@ void AGun::Deploy()
 void AGun::Holster(AWeapon* To)
 {
 	CancelReload();
+	SetAiming(false);
 	Super::Holster(To);
 }
 
@@ -146,6 +147,8 @@ void AGun::Reload()
 	if (!CanReload()) return;
 
 	FireR();
+	SetAiming(false);
+
 	if (HasAuthority()) State = EWeaponState::Reloading;
 
 	UAnimMontage* Anim;
@@ -261,6 +264,7 @@ void AGun::SetAiming(const bool bNewAiming)
 	if (bNewAiming)
 	{
 		GetCharacter()->Aim();
+		CancelReload();
 	}
 	else
 	{
