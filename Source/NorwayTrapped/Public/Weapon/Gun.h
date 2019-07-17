@@ -52,6 +52,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeploy();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnShoot(FVector Start, FVector End);
+
 private:
 	void HandleFire(float DeltaSeconds);
 	void Fire();
@@ -61,6 +64,7 @@ private:
 	void StopFire();
 	void Reload() override;
 	void Shoot();
+	void HitBullet(const FHitResult& Hit, const FVector& ShotDirection);
 
 	UPROPERTY(EditAnywhere)
 	float Damage;
@@ -70,6 +74,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=1, UIMin=1, UIMax=1500))
 	float Rpm = 750;
+
+	UPROPERTY(EditAnywhere)
+	float HipfireSpread;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0.1, UIMin=1, EditCondition=bChamber))
 	float TacticalReloadTime = 1;
@@ -86,10 +93,16 @@ private:
 	UPROPERTY(EditAnywhere)
 	FVector AimOffset;
 
+	UPROPERTY(EditAnywhere, Category=Socket)
+	FName AimSocket = "Aim";
+
+	UPROPERTY(EditAnywhere, Category=Socket)
+	FName AimEndSocket = "AimEnd";
+
 	UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0, UIMin=0))
 	float MaxRange = 50000;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Socket)
 	FName MuzzleSocketName = "Muzzle";
 
 	UPROPERTY(EditAnywhere)
@@ -122,7 +135,7 @@ private:
 	UPROPERTY(EditAnywhere, Category=Animation)
 	UAnimMontage* BoltAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category=Socket)
 	FName MagazineSocketName = "Magazine";
 
 	UPROPERTY(EditAnywhere)

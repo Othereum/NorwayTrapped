@@ -1,7 +1,6 @@
 // Copyright 2019 Seokjin Lee. All Rights Reserved.
 
 #include "Gun.h"
-#include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
@@ -207,42 +206,62 @@ void AGun::Shoot()
 	const auto Character = GetCharacter();
 	if (!Character) return;
 
-	const auto CameraLocation = Character->GetCameraComponent()->GetComponentLocation();
-	const auto CameraEnd = CameraLocation + Character->GetBaseAimRotation().Vector() * MaxRange;
+	auto Start = Character->GetPawnViewLocation();
+	FVector End;
+	FVector ShotDir;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(Character);
 
-	FHitResult CameraHit;
-	if (GetWorld()->LineTraceSingleByProfile(CameraHit, CameraLocation, CameraEnd, BulletCollisionProfile.Name, QueryParams))
+	if (bAiming)
 	{
-		const auto MuzzleLocation = GetMesh()->GetSocketLocation(MuzzleSocketName);
-
-		QueryParams.bReturnPhysicalMaterial = true;
-
-		auto ShotDir = CameraHit.Location - MuzzleLocation;
+		End = Start + (GetMesh()->GetSocketLocation(AimEndSocket) - Start).GetSafeNormal() * MaxRange;
+		ShotDir = End - Start;
 		ShotDir.Normalize();
-
-		FHitResult BulletHit;
-		if (GetWorld()->LineTraceSingleByProfile(BulletHit, MuzzleLocation, CameraHit.Location + ShotDir, BulletCollisionProfile.Name, QueryParams))
+	}
+	else
+	{
+		FHitResult CameraHit;
+		if (GetWorld()->LineTraceSingleByProfile(CameraHit, Start, Start + Character->GetBaseAimRotation().Vector() * MaxRange, BulletCollisionProfile.Name, QueryParams))
 		{
-			if (const auto HitActor = BulletHit.GetActor())
-			{
-				HitActor->TakeDamage(Damage, FPointDamageEvent{
-					Damage, BulletHit, ShotDir, DamageType
-				}, Character->Controller, this);
-			}
+			Start = GetMesh()->GetSocketLocation(MuzzleSocketName);
+			ShotDir = CameraHit.Location - Start;
+			ShotDir.Normalize();
+			End = MaxRange * FMath::VRandCone(ShotDir, HipfireSpread);
 
-			const auto PhysMat = BulletHit.PhysMaterial.Get();
-			if (PhysMat && Impact.Contains(PhysMat->SurfaceType))
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(this, Impact[PhysMat->SurfaceType],
-				                                         BulletHit.Location + BulletHit.Normal,
-				                                         BulletHit.Normal.Rotation(), true,
-				                                         EPSCPoolMethod::AutoRelease);
-			}
+			QueryParams.bReturnPhysicalMaterial = true;
 		}
+	}
+
+	QueryParams.bReturnPhysicalMaterial = true;
+
+	FHitResult BulletHit;
+	if (GetWorld()->LineTraceSingleByProfile(BulletHit, Start, End, BulletCollisionProfile.Name, QueryParams))
+	{
+		HitBullet(BulletHit, ShotDir);
+	}
+}
+
+void AGun::HitBullet(const FHitResult& Hit, const FVector& ShotDirection)
+{
+	if (const auto HitActor = Hit.GetActor())
+	{
+		HitActor->TakeDamage(Damage, FPointDamageEvent{Damage, Hit, ShotDirection, DamageType},
+		                     GetCharacter()->Controller, this);
+	}
+
+	const auto PhysMat = Hit.PhysMaterial.Get();
+	if (PhysMat && Impact.Contains(PhysMat->SurfaceType))
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			this,
+			Impact[PhysMat->SurfaceType],
+			Hit.Location + Hit.Normal,
+			Hit.Normal.Rotation(),
+			true,
+			EPSCPoolMethod::AutoRelease
+		);
 	}
 }
 
@@ -275,7 +294,7 @@ void AGun::SetAiming(const bool bNewAiming)
 
 FVector AGun::GetAimLocation() const
 {
-	return GetMesh()->GetSocketLocation("Aim");
+	return GetMesh()->GetSocketLocation(AimSocket);
 }
 
 float AGun::GetAimTime() const

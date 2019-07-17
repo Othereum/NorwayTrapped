@@ -2,8 +2,10 @@
 
 #include "FpsCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "UnrealNetwork.h"
 #include "Gun.h"
 #include "PostureComponent.h"
@@ -25,13 +27,15 @@ AFpsCharacter::AFpsCharacter()
 	bAlive{ true }
 {
 	GetMesh()->bReturnMaterialOnMove = true;
-	CameraComponent->SetupAttachment(GetMesh(), "Eye");
-	WeaponComponent->SetupAttachment(GetMesh(), "RightHand");
-	AimCamera->SetupAttachment(WeaponComponent);
-}
 
-//////////////////////////////////////////////////////////////////////////
-// Input
+	CameraComponent->SetupAttachment(GetMesh(), "Eye");
+	CameraComponent->bUsePawnControlRotation = true;
+
+	WeaponComponent->SetupAttachment(GetMesh(), "RightHand");
+
+	AimCamera->SetupAttachment(WeaponComponent);
+	AimCamera->bUsePawnControlRotation = true;
+}
 
 void AFpsCharacter::Tick(const float DeltaSeconds)
 {
@@ -59,6 +63,24 @@ void AFpsCharacter::Tick(const float DeltaSeconds)
 	}
 }
 
+void AFpsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AFpsCharacter, Hp);
+	DOREPLIFETIME(AFpsCharacter, bAlive);
+}
+
+FVector AFpsCharacter::GetPawnViewLocation() const
+{
+	if (const auto PC = Cast<APlayerController>(GetController()))
+		if (PC->PlayerCameraManager)
+			return PC->PlayerCameraManager->GetCameraLocation();
+	return CameraComponent->GetComponentLocation();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Input
+
 void AFpsCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
@@ -71,13 +93,6 @@ void AFpsCharacter::SetupPlayerInputComponent(UInputComponent* Input)
 
 	PostureComponent->SetupPlayerInputComponent(Input);
 	WeaponComponent->SetupPlayerInputComponent(Input);
-}
-
-void AFpsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AFpsCharacter, Hp);
-	DOREPLIFETIME(AFpsCharacter, bAlive);
 }
 
 void AFpsCharacter::MoveForward(const float Value)

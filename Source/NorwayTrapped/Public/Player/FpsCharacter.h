@@ -29,6 +29,8 @@ public:
 	UPostureComponent* GetPostureComponent() const { return PostureComponent; }
 	UWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 
+	FVector GetPawnViewLocation() const override;
+
 	float GetHp() const { return Hp; }
 	bool IsAlive() const { return bAlive; }
 	virtual void Kill();

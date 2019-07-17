@@ -24,7 +24,6 @@ void FStateInputData::Release(UPostureComponent* Comp)
 
 void FSprintData::Press(UPostureComponent* Comp)
 {
-	Comp->Owner->GetWeaponComponent()->FireR();
 	Super::Press(Comp);
 }
 
@@ -203,7 +202,16 @@ void UPostureComponent::SetSprinting_Internal(const bool b)
 {
 	if (bSprinting != b)
 	{
-		if (b) Owner->GetCharacterMovement()->MaxWalkSpeed *= Sprint.SpeedRatio;
+		if (b)
+		{
+			const auto WepComp = Owner->GetWeaponComponent();
+			if (const auto Gun = Cast<AGun>(WepComp->GetActiveWeapon()))
+			{
+				Gun->CancelReload();
+			}
+			WepComp->FireR();
+			Owner->GetCharacterMovement()->MaxWalkSpeed *= Sprint.SpeedRatio;
+		}
 		else Owner->GetCharacterMovement()->MaxWalkSpeed /= Sprint.SpeedRatio;
 	}
 	bSprinting = b;
