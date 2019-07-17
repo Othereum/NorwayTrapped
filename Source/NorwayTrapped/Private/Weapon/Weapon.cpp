@@ -15,9 +15,12 @@ AWeapon::AWeapon()
 	:Mesh{ CreateDefaultSubobject<USkeletalMeshComponent>("Mesh") }
 {
 	bReplicates = true;
+	bAlwaysRelevant = true;
+
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = Mesh;
+	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void AWeapon::BeginPlay()

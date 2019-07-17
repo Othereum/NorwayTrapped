@@ -284,6 +284,7 @@ void AGun::AimR()
 
 void AGun::SetAiming(const bool bNewAiming)
 {
+	if (State == EWeaponState::Reloading && !CanFire()) return;
 	if (bNewAiming)
 	{
 		GetCharacter()->Aim();

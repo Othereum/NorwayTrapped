@@ -26,7 +26,10 @@ AFpsCharacter::AFpsCharacter()
 	AimCamera{ CreateDefaultSubobject<UCameraComponent>(AimCameraName) },
 	bAlive{ true }
 {
+	bAlwaysRelevant = true;
+
 	GetMesh()->bReturnMaterialOnMove = true;
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
 	CameraComponent->SetupAttachment(GetMesh(), "Eye");
 	CameraComponent->bUsePawnControlRotation = true;

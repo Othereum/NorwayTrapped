@@ -78,8 +78,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=1, UIMin=1, UIMax=1500))
 	float Rpm = 750;
 
-	UPROPERTY(EditAnywhere)
-	float HipfireSpread;
+	UPROPERTY(EditAnywhere, meta=(UIMin=0, UIMax=1))
+	float HipfireSpread = .3f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true, ClampMin=0.1, UIMin=1, EditCondition=bChamber))
 	float TacticalReloadTime = 1;
