@@ -121,6 +121,7 @@ void AFpsCharacter::Kill()
 {
 	Hp = 0.f;
 	bAlive = false;
+	DisableInput(nullptr);
 	OnKill();
 }
 

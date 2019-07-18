@@ -56,7 +56,7 @@ void FStand::Exit(UPostureComponent* Comp, FCharacterPosture* After) const
 {
 	const auto SwitchingTo = After->GetEnum();
 	if (SwitchingTo == EPosture::Prone || FMath::IsNearlyZero(Comp->Owner->GetVelocity().Size()))
-		Comp->PlayAnimMontage(Comp->Stand.GetSwitchToAnim(SwitchingTo));
+		Comp->PlayPostureSwitchAnim(Comp->Stand.GetSwitchToAnim(SwitchingTo));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -107,7 +107,7 @@ void FCrouch::Exit(UPostureComponent* Comp, FCharacterPosture* After) const
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Crouch.SpeedRatio;
 	const auto SwitchingTo = After->GetEnum();
 	if (SwitchingTo == EPosture::Prone || FMath::IsNearlyZero(Comp->Owner->GetVelocity().Size()))
-		Comp->PlayAnimMontage(Comp->Crouch.GetSwitchToAnim(SwitchingTo));
+		Comp->PlayPostureSwitchAnim(Comp->Crouch.GetSwitchToAnim(SwitchingTo));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ void FProne::Exit(UPostureComponent* Comp, FCharacterPosture* After) const
 {
 	Comp->Owner->GetCharacterMovement()->MaxWalkSpeed /= Comp->Prone.SpeedRatio;
 	const auto Anim = Comp->Prone.GetSwitchToAnim(After->GetEnum());
-	Comp->PlayAnimMontage(Anim);
+	Comp->PlayPostureSwitchAnim(Anim);
 	Comp->SetProneSwitchDelegate();
 	Comp->Prone.bSwitching = true;
 }

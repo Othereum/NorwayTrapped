@@ -66,7 +66,7 @@ bool AGun::CanFire() const
 	case EWeaponState::Idle:
 	case EWeaponState::Firing:
 	case EWeaponState::Reloading:
-		return Clip > 0 && GetWorld()->GetTimeSeconds() - LastFire >= 60.f / Rpm;
+		return Clip > 0 && GetWorld()->GetTimeSeconds() - LastFire >= 60.f / Rpm && GetCharacter() && GetCharacter()->IsAlive();
 	default:
 		return false;
 	}
@@ -228,7 +228,7 @@ void AGun::Shoot()
 	}
 
 	ShotDir.Normalize();
-	End = MaxRange * HipfireSpreadRand.VRandCone(ShotDir, GetHipfireSpread());
+	End = Start + MaxRange * HipfireSpreadRand.VRandCone(ShotDir, GetHipfireSpread());
 
 	QueryParams.bReturnPhysicalMaterial = true;
 

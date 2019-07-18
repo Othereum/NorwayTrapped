@@ -175,9 +175,14 @@ bool UPostureComponent::CanSprint() const
 	return Sprint.bPressed && !Prone.bSwitching && Owner->GetInputAxisValue("MoveForward") > 0.f;
 }
 
-void UPostureComponent::PlayAnimMontage(UAnimMontage* Anim)
+void UPostureComponent::PlayAnimMontage(UAnimMontage* Anim) const
 {
 	Owner->PlayAnimMontage(Anim);
+}
+
+void UPostureComponent::PlayPostureSwitchAnim(UAnimMontage* Anim)
+{
+	PlayAnimMontage(Anim);
 	LastAnim = Anim;
 }
 

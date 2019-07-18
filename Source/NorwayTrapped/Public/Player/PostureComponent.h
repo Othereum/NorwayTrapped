@@ -118,7 +118,8 @@ public:
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
 
 	void Transit();
-	void PlayAnimMontage(UAnimMontage* Anim);
+	void PlayAnimMontage(UAnimMontage* Anim) const;
+	void PlayPostureSwitchAnim(UAnimMontage* Anim);
 	void SetProneSwitchDelegate();
 
 	void SetCapsuleHalfHeight(float Height, float MeshOffset = 0.f) const;
